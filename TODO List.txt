@@ -9,9 +9,14 @@ Things TODO on this project:
 
 
 
+
 Features to add (feel free to add items Alex)
 - fps on the interface
 - multiple colours ranges in one profile? (have a button to add a additional colour, can do this an arbitrary # of times ?)
+
+- [Alex] : Think up a way to set the ip of the rpi to the team number, ie 10.XX.YY.28 or something, without the user having to put a monitor on the rpi.
+	- maybe the image we ship has it default to 192.168.0.20 and the first time you connect to the web interface it prompts you for your team number?
+	- can we find a better way?
 
 
 

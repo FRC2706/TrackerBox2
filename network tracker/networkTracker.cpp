@@ -89,16 +89,18 @@ int main( int argc, char** argv )
 	IplImage* frame;
 	CvCapture* capture;
 
-	printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
-	cout.flush();
-	capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str());
+//	printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
+//	cout.flush();
+//	capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str());
+
 //	capture = cvCaptureFromFile("vid.avi");
-//	capture = cvCaptureFromCAM(0); // laptop's webcam
+	printf("Opening USB webcam...");
+	cout.flush();
+	capture = cvCaptureFromCAM(0); // laptop's webcam
 	printf("Done!\n\n\n");
 	
 	cvNamedWindow("Raw Image", CV_WINDOW_AUTOSIZE);
 	
-
 
 	frame = cvQueryFrame( capture );
 	
