@@ -1,0 +1,17 @@
+Things TODO on this project:
+
+- [Alex] : write a web interface that mirrors the opencv interface
+	- [Mike] : save yaml files and images (raw + backproj + anything else) to file in /tmp at each frame
+- [Mike] : clean up code (open source quality commenting, etc) and remove old or unused files.
+
+
+Features to add (feel free to add items Alex)
+- fps on the interface
+- multiple colours ranges in one profile? (have a button to add a additional colour, can do this an arbitrary # of times ?)
+
+
+
+Future:
+- test and update Java wrapper
+- write & test c++ wrapper
+- write & test LabView wrapper
