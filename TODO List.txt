@@ -2,7 +2,11 @@ Things TODO on this project:
 
 - [Alex] : write a web interface that mirrors the opencv interface
 	- [Mike] : save yaml files and images (raw + backproj + anything else) to file in /tmp at each frame
+
 - [Mike] : clean up code (open source quality commenting, etc) and remove old or unused files.
+
+- [Mike] : get rid of as many loops as possible by replacing them with matrix (linear algebra) operations.
+
 
 
 Features to add (feel free to add items Alex)
