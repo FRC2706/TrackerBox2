@@ -17,7 +17,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "networkTracker_withServer.h"
+/** I am aware that this code is an abhorant mix of c and c++ opencv calls and data structures. **/
+
+#include "networkTracker.h"
 #include "networkTrackerYAML_utils.h"
 
 #include <highgui.h>
@@ -32,12 +34,10 @@
 #include "yaml-cpp/yaml.h"
 
 #define SHOW_GUI 1
-#define PRINT_FPS 0
+#define PRINT_FPS 1
 
 using namespace cv;
 using namespace std;
-
-// cRIO_IP 10.2.96.2
 
 #define MY_IP "127.0.0.1" // find this out programatically?
 #define SOCK_CHANGE_PROFILE_PORT 1181 // read this from a config file, or hard-code it?
@@ -54,29 +54,28 @@ pthread_mutex_t paramsMutex = PTHREAD_MUTEX_INITIALIZER;
 ParticleReport mostRecentPR;
 pthread_mutex_t mostRecentPRMutex = PTHREAD_MUTEX_INITIALIZER;
 
-/** These matrices are the same size as the image and store the x-coords and y-coords of each point respectively.
- * They are used for computing the centre of mass of the mask **/
-cvArr* Xidxs;
-cvArr* Xmask;
-cvArr* Yidxs;
-cvArr* Ymask;
 
-void initializeMats(IplImage* frame) {
-	// TODO: check the syntax of this, I guessed at all this
-	Xidxs = cvCreateArr(cvSize(frame->width, frame->height), cv_uint32, 1);
-	Xmask = cvCreateArr(cvSize(frame->width, frame->height), cv_uint32, 1);
-	Yidxs = cvCreateArr(cvSize(frame->width, frame->height), cv_uint32, 1);
-	Ymask = cvCreateArr(cvSize(frame->width, frame->height). cv_uint32, 1);
-	
-	// this could be done more efficiently by tiling or repeating vectors using opencv calls, 
-	// but I'm not super concerned with runtime of a 1-time thing.
-	for(int i=0; i<frame->width; i++) {
-		for(int j=0; j<frame->height; j++) {
-			Xidxs->data[Xidxs->widthStep * j + i] = i;
-			Yidxs->data[Yidxs->widthStep * j + i] = j;
-		}		
-	}
-}
+
+// This is just here for posterity - turns out that the matrix algebra is actually slower than the loops. *sigh*
+
+//~ /** These matrices are the same size as the image and store the x-coords and y-coords of each point respectively.
+ //~ * They are used for computing the centre of mass of the mask **/
+//~ Mat* Xidxs;
+//~ Mat* Yidxs;
+//~ 
+//~ void initializeMats(IplImage* frame) {
+	//~ Xidxs = new Mat(cvSize(frame->width, frame->height), CV_32FC1);
+	//~ Yidxs = new Mat(cvSize(frame->width, frame->height), CV_32FC1);
+	//~ 
+	//~ // this could be done more efficiently by tiling or repeating vectors using opencv calls, 
+	//~ // but I'm not super concerned with runtime of a one-time thing.
+	//~ for(int i=0; i < frame->width; i++) {
+		//~ for(int j=0; j < frame->height; j++) {			
+			//~ Xidxs->at<float>(j,i) = i;
+			//~ Yidxs->at<float>(j,i) = j;
+		//~ }		
+	//~ }
+//~ }
 
 void writeParams(int x) { 
 	pthread_mutex_lock( &paramsMutex );
@@ -183,16 +182,12 @@ int main( int argc, char** argv )
 	capture = cvCaptureFromCAM(0); // laptop's webcam
 	printf("Done!\n\n\n");
 	
-	#if SHOW_GUI
-	cvNamedWindow("Raw Image", CV_WINDOW_AUTOSIZE);
-	#endif
-	
 	frame = cvQueryFrame( capture );
 	 
-	IplImage* mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
-	IplImage* mask1 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
-	IplImage* mask2 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
-	
+	IplImage* mask;
+	IplImage* mask1;
+	IplImage* mask2;
+		
 	initializeMats(frame);
 
 	#if PRINT_FPS
@@ -207,7 +202,9 @@ int main( int argc, char** argv )
 		
 		#if PRINT_FPS
 		gettimeofday(&ends, 0);
-		cout << "FPS: " << 1.0 / ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000) << endl;
+		//~ cout << "FPS: " << 1.0 / ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000) << endl;
+		cout << 1.0 / ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000) << endl;
+		
 		start = ends;
 		#endif
 		
@@ -235,20 +232,19 @@ int main( int argc, char** argv )
 			cvReleaseImage(&mask2);
 		}
 		
-		smoothImage(mask);
+		cvSmooth(mask, mask, CV_MEDIAN, 2*activeProfile.noiseFilterSize+1);
 		
 //		cvShowImage("Binary Mask", mask);
 		
 		// compute the center of mass of the target we found
 		computeParticleReport(mask);
 		
-	
 		// Now maybe draw a dot and arrow for the COM and vel
 		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
 		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
 		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
 		#if SHOW_GUI
-			cvShowImage("Raw Image", frame);
+			//~ cvShowImage("Raw Image", frame);
 			cvShowImage("Binary Mask", maskPlusCOM);
 		#endif
 		
@@ -256,8 +252,7 @@ int main( int argc, char** argv )
 		cvSaveImage("/dev/shm/TrackerBox2_rawImage.jpg", frame);
 		cvSaveImage("/dev/shm/TrackerBox2_maskPlusCOM.jpg", maskPlusCOM);
 		cvReleaseImage(&maskPlusCOM);
-
-		cvReleaseImage(&mask);
+		cvReleaseImage(&mask);	
 		cvWaitKey(5);
 	} // video frame loop
 	
@@ -275,39 +270,36 @@ void computeParticleReport(IplImage* mask) {
 	
 	int xAccum, yAccum, areaAccum;
 	xAccum = yAccum = areaAccum = 0;
+	//~ 
+	//~ // compute COM of the mask
+	//~ // TODO: this can be vectorized!!
+	for (int i = 0; i < mask->width; i++)
+		for (int j = 0; j < mask->height; j++)
+			// if this pixel is a 1
+			if (mask->imageData[mask->widthStep * j + i]) {
+				areaAccum++;	// cvSum(mask);
+				xAccum += i;
+				yAccum += j;
+			}	
+	// average
+	COM_center.x = pr.centerX = ((double) xAccum) / areaAccum;
+	COM_center.y = pr.centerY = ((double) yAccum) / areaAccum;
 	
-	// compute COM of the mask
-	// TODO: this can be vectorized!!
-	//~ for (int i = 0; i < mask->width; i++)
-		//~ for (int j = 0; j < mask->height; j++)
-			//~ // if this pixel is a 1
-			//~ if (mask->imageData[mask->widthStep * j + i]) {
-				//~ areaAccum++;	// cvSum(mask);
-				//~ xAccum += i;
-				//~ yAccum += j;
-			//~ }	
-	//~ // average
-	//~ COM_center.x = pr.centerX = ((double) xAccum) / areaAccum;
-	//~ COM_center.y = pr.centerY = ((double) yAccum) / areaAccum;
-	
-	
-	// this returns a cvScalar....does that auto-cast to an int?
-	cvMul(mask, Xidxs, Xmask);
-	COM_center.x = pr.centerX = (double) cvAvg( Xmask );
-	cvMul(mask, Yidxs, Ymask);
-	COM_center.y = pr.centerY = (double) cvAvg( Ymask );
+	// This is just here for posterity - turns out that the matrix algebra is actually slower than the loops. *sigh*
+	//~ COM_center.x = pr.centerX = mean(*Xidxs, Mat(mask)/255.0 ).val[0];
+	//~ COM_center.y = pr.centerY = mean(*Yidxs, Mat(mask)/255.0 ).val[0];
 	
 	// normalize to [-1, 1]
 	pr.centerX = (( 2*pr.centerX / mask->width) - 1);
 	pr.centerY = (( 2*pr.centerY / mask->height) - 1);
-	pr.area = ((double) cvSum(mask)) / (mask->width*mask->height);
+	pr.area = ((double) cvCountNonZero(mask)) / (mask->width*mask->height);
 	
 	// smooth a little bit
 	float alpha = 0.4;
 	pr.velX = alpha*(pr.centerX - prevReport.centerX) + (1-alpha)*prevReport.velX;
 	pr.velY = alpha*(pr.centerY - prevReport.centerY) + (1-alpha)*prevReport.velY;
 	
-	// check for NANs (ie divide-by-zero)
+	// check for NANs (ie divide-by-zero) - this is probably completely unnecessary
 	if(isnan(pr.centerX)) pr.centerX = 0.0;
 	if(isnan(pr.centerY)) pr.centerY = 0.0;
 	if(isnan(pr.area)) pr.area = 0.0;
@@ -319,23 +311,6 @@ void computeParticleReport(IplImage* mask) {
 	writeParticleReportToFile(pr);
 	pthread_mutex_unlock( &mostRecentPRMutex );
 }
-
-void smoothImage(IplImage* image) {
-    // To smooth perform a dilation, then an equal and opposite erosion
-    
-	cvSmooth(image, image, CV_MEDIAN, 2*activeProfile.noiseFilterSize+1);
-    
-    //Mat element = getStructuringElement( MORPH_ELLIPSE,
-                                       //Size( 2*activeProfile.smootherSize + 1, 2*activeProfile.smootherSize+1 ),
-                                       //Point( activeProfile.smootherSize, activeProfile.smootherSize ) );
-	
-	//Mat	matImage = Mat(image);
-	//// Apply the erosion operation
-	//erode( matImage, matImage, element );
-	
-	//dilate( matImage, matImage, element );
-}
-
 
 /**
  * Takes an BGR image.

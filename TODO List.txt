@@ -6,7 +6,7 @@ Things TODO on this project:
 - [Mike] : clean up code (open-source quality commenting, etc) and remove old or unused files.
 	- (DONE!) [Mike] : rm networkTracker.*; mv networkTracker_withServer.* -> networkTracker.*
 
-- [Mike] : get rid of as many loops as possible by replacing them with matrix (linear algebra) operations.
+- (DONE!: turned out not to help) [Mike] : get rid of as many loops as possible by replacing them with matrix (linear algebra) operations.
 
 - [Alex] : add a toggle on the web interface for "IP Axis Cam" or "USB Cam"
 
