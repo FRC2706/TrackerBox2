@@ -1,5 +1,7 @@
 #include "networkTrackerYAML_utils.h"
 
+#include <unistd.h>
+
 inline float clamp(float x, float a, float b){
     return x < a ? a : (x > b ? b : x);
 }
@@ -36,13 +38,73 @@ void operator >> (const YAML::Node& node, ParticleReport& pr) {
 	node["velY"] >> pr.velY;
 }
 
+bool operator == (Parameters& p1, Parameters& p2) {
+	if (p1.ipParams != p2.ipParams)
+		return false;
+	
+	if (p1.activeProfileIdx != p2.activeProfileIdx)
+		return false;
+	
+	for(int i=0; i<10; i++)
+		if (p1.profiles[i] != p2.profiles[i])
+			return false;
+	
+	return true;
+}
+
+bool operator != (Parameters& p1, Parameters& p2) {
+	return ! (p1 == p2);
+}
+
+bool operator == (IPParameters& ip1, IPParameters& ip2) {
+	if (ip1.axisCamAddr.compare(ip2.axisCamAddr) != 0)
+		return false;
+	
+	if (ip1.cRIO_IP.compare(ip2.cRIO_IP) != 0)
+		return false;
+		
+	if (ip1.cRIO_port.compare(ip2.cRIO_port) != 0)
+		return false;
+	
+	return true;
+}
+
+bool operator != (IPParameters& ip1, IPParameters& ip2) {
+	return ! (ip1 == ip2);
+}
+
+bool operator == (ProfileParameters& pp1, ProfileParameters& pp2) {
+	if (pp1.minH != pp2.minH || pp1.maxH != pp2.maxH)
+		return false;
+		
+	if (pp1.noiseFilterSize != pp2.noiseFilterSize || pp1.smootherSize != pp2.smootherSize)
+		return false;
+	
+	return true;
+}
+
+bool operator != (ProfileParameters& pp1, ProfileParameters& pp2) {
+	return ! (pp1 == pp2);
+}
+
 Parameters loadParametersFromFile() {
 	// read the parameters YAML file and update the global variables	
 	Parameters p;
 	
+	// check if the file exists on ramdisk. The first time we run the loop we'll need to copy it into ramdisk from the curdir.
+	if( access( "/dev/shm/TrackerBox2_parameters.yaml", F_OK ) == -1 ) {
+		// file doesn't exist - so copy it over!
+		std::ifstream  src("TrackerBox2_parameters.yaml", std::ios::binary);
+		std::ofstream  dst("/dev/shm/TrackerBox2_parameters.yaml",   std::ios::binary);
+
+		dst << src.rdbuf();
+		src.close();
+		dst.close();
+	}
+	
 	std::ifstream fin;
 	while( !fin.is_open())
-		fin.open("parameters.yaml");
+		fin.open("/dev/shm/TrackerBox2_parameters.yaml");
 	YAML::Parser parser(fin);
     fin.close();
     
@@ -50,9 +112,6 @@ Parameters loadParametersFromFile() {
     parser.GetNextDocument(doc);
     
     doc >> p.ipParams;
-//	doc["AxisCamAddress"] 	>> p.ipParams.axisCamAddr;
-//	doc["cRIO_IP"] 			>> p.ipParams.cRIO_IP;
-//	doc["cRIO_port"] 		>> p.ipParams.cRIO_port;
     
     doc["ActiveProfileIdx"] >> p.activeProfileIdx;
     p.activeProfileIdx = clamp(p.activeProfileIdx, 0, 9);
@@ -62,20 +121,12 @@ Parameters loadParametersFromFile() {
 		profileName << "Profile" << i;
     	
     	doc[profileName.str().c_str()] >> p.profiles[i];
-//		doc[profileName.str().c_str()]["minH"] 			>> p.profiles[i].minH;
-//		doc[profileName.str().c_str()]["maxH"] 			>> p.profiles[i].maxH;
-//		doc[profileName.str().c_str()]["noiseFilterSize"] >> p.profiles[i].noiseFilterSize;
-//		doc[profileName.str().c_str()]["smootherSize"] 	>> p.profiles[i].smootherSize;
-	
-		// clamp the values to valid ranges
-		p.profiles[i].minH = clamp(p.profiles[i].minH, 0, 255);
-		p.profiles[i].maxH = clamp(p.profiles[i].maxH, 0, 255);
-		p.profiles[i].noiseFilterSize = clamp(p.profiles[i].noiseFilterSize, 0, 25);
-		p.profiles[i].smootherSize = clamp(p.profiles[i].smootherSize, 0, 25);
     }
     
     return p;
 }
+
+
 
 void writeParametersToFile(Parameters p) {
 	using namespace std;
@@ -110,7 +161,13 @@ void writeParametersToFile(Parameters p) {
 	
 	ofstream myfile;
 	while(!myfile.is_open())
-		myfile.open ("parameters.yaml");
+		myfile.open ("/dev/shm/TrackerBox2_parameters.yaml");
+	myfile << out.c_str();
+	myfile.close();
+	
+	
+	while(!myfile.is_open())
+		myfile.open ("TrackerBox2_parameters.yaml");
 	myfile << out.c_str();
 	myfile.close();
 }
@@ -120,7 +177,7 @@ ParticleReport loadParticleReportFromFile() {
 	
 	std::ifstream fin;
 	while (!fin.is_open())
-		fin.open("particleReport.yaml");
+		fin.open("/dev/shm/TrackerBox2_particleReport.yaml");
     YAML::Parser parser(fin);
     fin.close();
     
@@ -150,7 +207,7 @@ void writeParticleReportToFile(ParticleReport pr) {
 	
 	ofstream myfile;
 	while(!myfile.is_open())
-		myfile.open ("particleReport.yaml");
+		myfile.open ("/dev/shm/TrackerBox2_particleReport.yaml");
 	myfile << out.c_str();
 	myfile.close();
 }

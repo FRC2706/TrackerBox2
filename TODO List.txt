@@ -1,13 +1,16 @@
 Things TODO on this project:
 
 - [Alex] : write a web interface that mirrors the opencv interface
-	- [Mike] : save yaml files and images (raw + backproj + anything else) to file in /tmp at each frame
+	- (DONE!) [Mike] : save yaml files and images (raw + backproj + anything else) to file in /tmp at each frame
 
 - [Mike] : clean up code (open-source quality commenting, etc) and remove old or unused files.
+	- [Mike] : rm networkTracker.*; mv networkTracker_withServer.* -> networkTracker.*
 
 - [Mike] : get rid of as many loops as possible by replacing them with matrix (linear algebra) operations.
 
 - [Alex] : add a toggle on the web interface for "IP Axis Cam" or "USB Cam"
+
+- (DONE!) [Mike] : HSV wrap-around (ie if min > max then take everything < max and > min)
 
 
 Features to add (feel free to add items Alex)
@@ -21,7 +24,7 @@ Features to add (feel free to add items Alex)
 
 
 
-Future:
+With cRIO:
 - test and update Java wrapper
 - write & test c++ wrapper
 - write & test LabView wrapper

@@ -57,7 +57,7 @@ pthread_mutex_t mostRecentPRMutex = PTHREAD_MUTEX_INITIALIZER;
 void writeParams(int x) { 
 	pthread_mutex_lock( &paramsMutex );
 	p.profiles[p.activeProfileIdx] = activeProfile;
-	writeParametersToFile(p);  
+	writeParametersToFile(p);
 	pthread_mutex_unlock( &paramsMutex );
 }
 
@@ -93,7 +93,11 @@ void changeProfile(int x) {
   * before you call me!
   */
 void loadParams() {
-	p = loadParametersFromFile();
+	Parameters newP = loadParametersFromFile();
+	if (newP != p) {
+		writeParametersToFile(newP);
+		p = newP;
+	}
 	activeProfile = p.profiles[p.activeProfileIdx];
 	activeProfileSlider = p.activeProfileIdx;
 //	updateTrackbars();
@@ -101,10 +105,9 @@ void loadParams() {
 
 CvPoint COM_center;
 
-
 int main( int argc, char** argv )
 {
-	// Start the network servers
+	// Start the network servers in seperate threads
 	pthread_t threadChangeProfile;
 	pthread_t threadDataRequest;
 	int rc;
@@ -130,18 +133,31 @@ int main( int argc, char** argv )
 	cvWaitKey(5);
 	#endif
     
-    pthread_mutex_lock( &paramsMutex );
+    // copy the parameters.yaml file from the local dir to ramdisk at /dev/shm
+	std::ifstream  src("TrackerBox2_parameters.yaml", std::ios::binary);
+	std::ofstream  dst("/dev/shm/TrackerBox2_parameters.yaml",   std::ios::binary);
+	dst << src.rdbuf();
+	src.close();
+	dst.close();
+    
+    
+    pthread_mutex_lock( &paramsMutex );    
 	loadParams();
 	pthread_mutex_unlock( &paramsMutex );
 
 	IplImage* frame;
 	CvCapture* capture;
 
-	printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
-	cout.flush();
-	capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str());
+
+	// TODO: Select which camera in the GUI. This will need some non-trivial changes to allow it on the fly.
+	
+	//~ printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
+	//~ cout.flush();
+	//~ capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str());
 //	capture = cvCaptureFromFile("vid.avi");
-//	capture = cvCaptureFromCAM(0); // laptop's webcam
+	printf("Opening USB webcam...");
+	cout.flush();
+	capture = cvCaptureFromCAM(0); // laptop's webcam
 	printf("Done!\n\n\n");
 	
 	#if SHOW_GUI
@@ -151,6 +167,8 @@ int main( int argc, char** argv )
 	frame = cvQueryFrame( capture );
 	 
 	IplImage* mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+	IplImage* mask1 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+	IplImage* mask2 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 
 	#if PRINT_FPS
 	timeval start, ends;
@@ -168,10 +186,6 @@ int main( int argc, char** argv )
 		start = ends;
 		#endif
 		
-		#if SHOW_GUI
-		cvShowImage("Raw Image", frame);
-		#endif
-		
 		// Do some processing on the image
 		
 		mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
@@ -181,7 +195,20 @@ int main( int argc, char** argv )
 		int maxH = activeProfile.maxH;
 		pthread_mutex_unlock( &paramsMutex );
 		
-		thresholdHSV(frame, mask, minH, maxH, 40, 255, 40, 255);
+		// Threshold the image (if min > max then take the outside region)
+		if (minH < maxH)
+			thresholdHSV(frame, mask, minH, maxH, 40, 255, 40, 255);
+		else {
+			mask1 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+			mask2 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+			
+			thresholdHSV(frame, mask1, 0, maxH, 40, 255, 40, 255);
+			thresholdHSV(frame, mask2, minH, 255, 40, 255, 40, 255);
+			
+			cvOr(mask1, mask2, mask);
+			cvReleaseImage(&mask1);
+			cvReleaseImage(&mask2);
+		}
 		
 		smoothImage(mask);
 		
@@ -190,20 +217,25 @@ int main( int argc, char** argv )
 		// compute the center of mass of the target we found
 		computeParticleReport(mask);
 		
-		#if SHOW_GUI
+	
 		// Now maybe draw a dot and arrow for the COM and vel
 		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
 		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
 		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
-		cvShowImage("Binary Mask", maskPlusCOM);
-		cvReleaseImage(&maskPlusCOM);
+		#if SHOW_GUI
+			cvShowImage("Raw Image", frame);
+			cvShowImage("Binary Mask", maskPlusCOM);
 		#endif
+		
+		// save both the raw image and maskPlusCOM to /tmp so that the web interface can show them
+		cvSaveImage("/dev/shm/TrackerBox2_rawImage.jpg", frame);
+		cvSaveImage("/dev/shm/TrackerBox2_maskPlusCOM.jpg", maskPlusCOM);
+		cvReleaseImage(&maskPlusCOM);
 
 		cvReleaseImage(&mask);
 		cvWaitKey(5);
 	} // video frame loop
 	
-	cvReleaseImage(&mask);
 }
 
 /**
@@ -242,7 +274,7 @@ void computeParticleReport(IplImage* mask) {
 	pr.velX = alpha*(pr.centerX - prevReport.centerX) + (1-alpha)*prevReport.velX;
 	pr.velY = alpha*(pr.centerY - prevReport.centerY) + (1-alpha)*prevReport.velY;
 	
-	// check for NANs
+	// check for NANs (ie divide-by-zero)
 	if(isnan(pr.centerX)) pr.centerX = 0.0;
 	if(isnan(pr.centerY)) pr.centerY = 0.0;
 	if(isnan(pr.area)) pr.area = 0.0;

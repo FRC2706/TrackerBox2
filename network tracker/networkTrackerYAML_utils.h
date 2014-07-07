@@ -26,11 +26,14 @@
 
 #include "networkTracker.h"
 
-// All of these values will be read from "parameters.yaml"
-
-
 void operator >> (const YAML::Node& node, IPParameters& p);
 void operator >> (const YAML::Node& node, ProfileParameters& p);
+bool operator == (Parameters& p1, Parameters& p2);
+bool operator != (Parameters& p1, Parameters& p2);
+bool operator == (IPParameters& ip1, IPParameters& ip2);
+bool operator != (IPParameters& ip1, IPParameters& ip2);
+bool operator == (ProfileParameters& pp1, ProfileParameters& pp2);
+bool operator != (ProfileParameters& pp1, ProfileParameters& pp2);
 
 Parameters loadParametersFromFile();
 void writeParametersToFile(Parameters p);
