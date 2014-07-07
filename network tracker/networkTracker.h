@@ -54,7 +54,7 @@ struct ParticleReport {
 	double velY;
 };
 
-ParticleReport computeParticleReport(IplImage* mask, ParticleReport prevReport);
+void computeParticleReport(IplImage* mask);
 
 IplImage* findCircles(IplImage* image);
 
