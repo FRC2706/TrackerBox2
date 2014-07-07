@@ -7,13 +7,9 @@ VALGRIND_FLAGS = -g -O0
 # 3.
 OpenCVLibs = `pkg-config --libs opencv`
 YAMLLibs = `pkg-config --libs yaml-cpp`
-
-networkTracker_withServer: networkTracker_withServer.cpp networkTracker.h networkTrackerYAML_utils.o
-	$(Cxx) $(CXXFLAGS) -O3 $^ -o $@ $(OpenCVLibs) $(YAMLLibs) -lpthread
 	
 networkTracker: networkTracker.cpp networkTracker.h networkTrackerYAML_utils.o
-	$(Cxx) $(CXXFLAGS) -O3 $^ -o $@ $(OpenCVLibs) $(YAMLLibs)
-	
+	$(Cxx) $(CXXFLAGS) -O3 $^ -o $@ $(OpenCVLibs) $(YAMLLibs) -lpthread
 	
 generateYAML: generateYAML.cpp networkTrackerYAML_utils.o
 	$(Cxx) $(CXXFLAGS) -O3 $^ -o $@ $(YAMLLibs)
