@@ -54,6 +54,30 @@ pthread_mutex_t paramsMutex = PTHREAD_MUTEX_INITIALIZER;
 ParticleReport mostRecentPR;
 pthread_mutex_t mostRecentPRMutex = PTHREAD_MUTEX_INITIALIZER;
 
+/** These matrices are the same size as the image and store the x-coords and y-coords of each point respectively.
+ * They are used for computing the centre of mass of the mask **/
+cvArr* Xidxs;
+cvArr* Xmask;
+cvArr* Yidxs;
+cvArr* Ymask;
+
+void initializeMats(IplImage* frame) {
+	// TODO: check the syntax of this, I guessed at all this
+	Xidxs = cvCreateArr(cvSize(frame->width, frame->height), cv_uint32, 1);
+	Xmask = cvCreateArr(cvSize(frame->width, frame->height), cv_uint32, 1);
+	Yidxs = cvCreateArr(cvSize(frame->width, frame->height), cv_uint32, 1);
+	Ymask = cvCreateArr(cvSize(frame->width, frame->height). cv_uint32, 1);
+	
+	// this could be done more efficiently by tiling or repeating vectors using opencv calls, 
+	// but I'm not super concerned with runtime of a 1-time thing.
+	for(int i=0; i<frame->width; i++) {
+		for(int j=0; j<frame->height; j++) {
+			Xidxs->data[Xidxs->widthStep * j + i] = i;
+			Yidxs->data[Yidxs->widthStep * j + i] = j;
+		}		
+	}
+}
+
 void writeParams(int x) { 
 	pthread_mutex_lock( &paramsMutex );
 	p.profiles[p.activeProfileIdx] = activeProfile;
@@ -140,7 +164,6 @@ int main( int argc, char** argv )
 	src.close();
 	dst.close();
     
-    
     pthread_mutex_lock( &paramsMutex );    
 	loadParams();
 	pthread_mutex_unlock( &paramsMutex );
@@ -169,6 +192,8 @@ int main( int argc, char** argv )
 	IplImage* mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 	IplImage* mask1 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 	IplImage* mask2 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+	
+	initializeMats(frame);
 
 	#if PRINT_FPS
 	timeval start, ends;
@@ -251,23 +276,31 @@ void computeParticleReport(IplImage* mask) {
 	int xAccum, yAccum, areaAccum;
 	xAccum = yAccum = areaAccum = 0;
 	
+	// compute COM of the mask
 	// TODO: this can be vectorized!!
-	for (int i = 0; i < mask->width; i++)
-		for (int j = 0; j < mask->height; j++)
-			if (mask->imageData[mask->widthStep * j + i]) {
-				areaAccum++;
-				xAccum += i;
-				yAccum += j;
-			}	
+	//~ for (int i = 0; i < mask->width; i++)
+		//~ for (int j = 0; j < mask->height; j++)
+			//~ // if this pixel is a 1
+			//~ if (mask->imageData[mask->widthStep * j + i]) {
+				//~ areaAccum++;	// cvSum(mask);
+				//~ xAccum += i;
+				//~ yAccum += j;
+			//~ }	
+	//~ // average
+	//~ COM_center.x = pr.centerX = ((double) xAccum) / areaAccum;
+	//~ COM_center.y = pr.centerY = ((double) yAccum) / areaAccum;
 	
-	// average
-	COM_center.x = pr.centerX = ((double) xAccum) / areaAccum;
-	COM_center.y = pr.centerY = ((double) yAccum) / areaAccum;
+	
+	// this returns a cvScalar....does that auto-cast to an int?
+	cvMul(mask, Xidxs, Xmask);
+	COM_center.x = pr.centerX = (double) cvAvg( Xmask );
+	cvMul(mask, Yidxs, Ymask);
+	COM_center.y = pr.centerY = (double) cvAvg( Ymask );
 	
 	// normalize to [-1, 1]
 	pr.centerX = (( 2*pr.centerX / mask->width) - 1);
 	pr.centerY = (( 2*pr.centerY / mask->height) - 1);
-	pr.area = ((double) areaAccum) / (mask->width*mask->height);
+	pr.area = ((double) cvSum(mask)) / (mask->width*mask->height);
 	
 	// smooth a little bit
 	float alpha = 0.4;
