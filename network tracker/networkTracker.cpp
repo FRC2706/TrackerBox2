@@ -39,13 +39,6 @@
 using namespace cv;
 using namespace std;
 
-#define MY_IP "127.0.0.1" // find this out programatically?
-#define SOCK_CHANGE_PROFILE_PORT 1181 // read this from a config file, or hard-code it?
-#define SOCK_CHANGE_DATA_REQUEST_PORT 1182 // read this from a config file, or hard-code it?
-
-void *runChangeProfileServer(void *placeHolder);
-void *runDataRequestServer(void *placeHolder);
-
 Parameters p;
 ProfileParameters activeProfile;
 int activeProfileSlider = 0;
@@ -188,7 +181,7 @@ int main( int argc, char** argv )
 	IplImage* mask1;
 	IplImage* mask2;
 		
-	initializeMats(frame);
+	//~ initializeMats(frame);
 
 	#if PRINT_FPS
 	timeval start, ends;

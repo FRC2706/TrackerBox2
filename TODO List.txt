@@ -5,12 +5,17 @@ Things TODO on this project:
 
 - [Mike] : clean up code (open-source quality commenting, etc) and remove old or unused files.
 	- (DONE!) [Mike] : rm networkTracker.*; mv networkTracker_withServer.* -> networkTracker.*
+	
+	- [Mike or Alex] : Update all the opencv data structures and function calls to the c++ api. (currently it's a mashup of the c and c++ api's)
+
+	- [Mike] : Still need to clean up / comment networkTracker.cpp
 
 - (DONE!: turned out not to help) [Mike] : get rid of as many loops as possible by replacing them with matrix (linear algebra) operations.
 
 - [Alex] : add a toggle on the web interface for "IP Axis Cam" or "USB Cam"
 
 - (DONE!) [Mike] : HSV wrap-around (ie if min > max then take everything < max and > min)
+
 
 
 Features to add (feel free to add items Alex)

@@ -10,7 +10,6 @@ inline int clamp(int x, int a, int b) {
     return x < a ? a : (x > b ? b : x);
 }
 
-
 void operator >> (const YAML::Node& node, IPParameters& p) {
 	node["AxisCamAddress"] 	>> p.axisCamAddr;
 	node["cRIO_IP"] 		>> p.cRIO_IP;
@@ -88,26 +87,28 @@ bool operator != (ProfileParameters& pp1, ProfileParameters& pp2) {
 }
 
 Parameters loadParametersFromFile() {
-	// read the parameters YAML file and update the global variables	
 	Parameters p;
 	
-	// check if the file exists on ramdisk. The first time we run the loop we'll need to copy it into ramdisk from the curdir.
-	if( access( "/dev/shm/TrackerBox2_parameters.yaml", F_OK ) == -1 ) {
+	// check if the file exists on ramdisk, if not copy it from the sd card.
+	// The first time we run the loop we'll need to copy it over.
+	if( access( ramdiskParamsFile, F_OK ) == -1 ) {
 		// file doesn't exist - so copy it over!
-		std::ifstream  src("TrackerBox2_parameters.yaml", std::ios::binary);
-		std::ofstream  dst("/dev/shm/TrackerBox2_parameters.yaml",   std::ios::binary);
+		std::ifstream  src(permanentParamsFile, std::ios::binary);
+		std::ofstream  dst(ramdiskParamsFile,   std::ios::binary);
 
 		dst << src.rdbuf();
 		src.close();
 		dst.close();
 	}
 	
+	// Open the file from the ramdisk
 	std::ifstream fin;
 	while( !fin.is_open())
-		fin.open("/dev/shm/TrackerBox2_parameters.yaml");
+		fin.open(ramdiskParamsFile);
 	YAML::Parser parser(fin);
     fin.close();
     
+    // Use YAML tools to parse the file into c++ datastructures
     YAML::Node doc;
     parser.GetNextDocument(doc);
     
@@ -161,13 +162,13 @@ void writeParametersToFile(Parameters p) {
 	
 	ofstream myfile;
 	while(!myfile.is_open())
-		myfile.open ("/dev/shm/TrackerBox2_parameters.yaml");
+		myfile.open (ramdiskParamsFile);
 	myfile << out.c_str();
 	myfile.close();
 	
 	
 	while(!myfile.is_open())
-		myfile.open ("TrackerBox2_parameters.yaml");
+		myfile.open (permanentParamsFile);
 	myfile << out.c_str();
 	myfile.close();
 }
@@ -177,7 +178,7 @@ ParticleReport loadParticleReportFromFile() {
 	
 	std::ifstream fin;
 	while (!fin.is_open())
-		fin.open("/dev/shm/TrackerBox2_particleReport.yaml");
+		fin.open(ramdiskParamsFile);
     YAML::Parser parser(fin);
     fin.close();
     
@@ -207,7 +208,7 @@ void writeParticleReportToFile(ParticleReport pr) {
 	
 	ofstream myfile;
 	while(!myfile.is_open())
-		myfile.open ("/dev/shm/TrackerBox2_particleReport.yaml");
+		myfile.open (ramdiskPartReportFile);
 	myfile << out.c_str();
 	myfile.close();
 }

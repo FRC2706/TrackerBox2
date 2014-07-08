@@ -25,6 +25,8 @@
 #include <cv.h>
 #include "yaml-cpp/yaml.h"
 
+/***** structs for holding network data, and results of computing a frame *****/
+
 struct IPParameters {
 	std::string axisCamAddr;
 	std::string cRIO_IP;
@@ -54,15 +56,23 @@ struct ParticleReport {
 	double velY;
 };
 
+
+/***** Computer vision stuff *****/
+
 void computeParticleReport(IplImage* mask);
-
-IplImage* findCircles(IplImage* image);
-
 void sendDataTocRIO(const char* msg);
-
 void smoothImage(IplImage* image);
-
 void thresholdHSV(IplImage* image, IplImage* mask, unsigned char minH, unsigned char maxH, unsigned char minS, unsigned char maxS, unsigned char minV, unsigned char maxV);
+
+
+/***** Network stuff to communicate with the cRIO *****/
+
+#define MY_IP "127.0.0.1" // find this out programatically?
+#define SOCK_CHANGE_PROFILE_PORT 1181 // read this from a config file, or hard-code it?
+#define SOCK_CHANGE_DATA_REQUEST_PORT 1182 // read this from a config file, or hard-code it?
+
+void *runChangeProfileServer(void *placeHolder);
+void *runDataRequestServer(void *placeHolder);
 
 
 #endif
