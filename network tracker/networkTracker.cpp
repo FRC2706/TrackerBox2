@@ -195,8 +195,8 @@ int main( int argc, char** argv )
 		
 		#if PRINT_FPS
 		gettimeofday(&ends, 0);
-		//~ cout << "FPS: " << 1.0 / ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000) << endl;
-		cout << 1.0 / ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000) << endl;
+		cout << "FPS: " << 1.0 / ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000) << endl;
+		
 		
 		start = ends;
 		#endif

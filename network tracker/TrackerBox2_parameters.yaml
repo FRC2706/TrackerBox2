@@ -1,7 +1,7 @@
 AxisCamAddress: http://10.2.96.11/mjpg/video.mjpg
 cRIO_IP: 10.2.96.2
 cRIO_port: 1180
-ActiveProfileIdx: 2
+ActiveProfileIdx: 1
 Profile0:
   minH: 98
   maxH: 103
