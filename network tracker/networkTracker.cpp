@@ -270,17 +270,16 @@ void computeParticleReport(IplImage* mask) {
 	
 	int xAccum, yAccum, areaAccum;
 	xAccum = yAccum = areaAccum = 0;
-	//~ 
-	//~ // compute COM of the mask
-	//~ // TODO: this can be vectorized!!
+	
+	// compute COM of the mask!
 	for (int i = 0; i < mask->width; i++)
 		for (int j = 0; j < mask->height; j++)
 			// if this pixel is a 1
 			if (mask->imageData[mask->widthStep * j + i]) {
-				areaAccum++;	// cvSum(mask);
+				areaAccum++;
 				xAccum += i;
 				yAccum += j;
-			}	
+			}
 	// average
 	COM_center.x = pr.centerX = ((double) xAccum) / areaAccum;
 	COM_center.y = pr.centerY = ((double) yAccum) / areaAccum;
