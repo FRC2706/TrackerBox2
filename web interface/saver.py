@@ -20,7 +20,7 @@ def save(da):
         data_file["ActiveProfileIdx"] = int(message[2])
 
     with open('/dev/shm/TrackerBox2_parameters.yaml', 'w') as outfile:
-        outfile.write( yaml.dump(data_file, default_flow_style=True) )
+        outfile.write( yaml.dump(data_file, default_flow_style=False) )
 
 class MyDBUSService(dbus.service.Object):
     def __init__(self):

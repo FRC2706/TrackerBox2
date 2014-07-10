@@ -3,9 +3,9 @@ cRIO_IP: 10.2.96.2
 cRIO_port: 1180
 ActiveProfileIdx: 1
 Profile0:
-  minH: 98
-  maxH: 103
-  noiseFilterSize: 9
+  minH: 100
+  maxH: 105
+  noiseFilterSize: 0
   smootherSize: 2
 Profile1:
   minH: 21
@@ -48,7 +48,7 @@ Profile8:
   noiseFilterSize: 5
   smootherSize: 2
 Profile9:
-  minH: 110
+  minH: 255
   maxH: 141
-  noiseFilterSize: 5
+  noiseFilterSize: 25
   smootherSize: 2
