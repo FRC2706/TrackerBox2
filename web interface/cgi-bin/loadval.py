@@ -18,4 +18,7 @@ for i in range(0,2):
 	 string_to_print += str(data_file["Profile"+profile_to_load][values[i]])
 	 string_to_print += ","
 
+string_to_print += str(data_file["ActiveProfileIdx"])
+string_to_print += ','
+
 print string_to_print

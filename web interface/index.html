@@ -25,6 +25,7 @@
 	<script>
 		var mySlider, mySlider2, mySlider3;
         var piIp = location.host;
+        var d = false;
 		
 		function doOnLoad(){
             
@@ -106,6 +107,11 @@
                 success: function(response){
                     console.log(response);
                     var oldval = response.split(',');
+                    if (d != true) {
+                        d = true;
+                        getOldData(oldval[3])
+                    }
+                    mySlider4.setValue(oldval[3]);
                     mySlider.setValue(oldval[0]);
                     mySlider2.setValue(oldval[1]);
                     mySlider3.setValue(oldval[2]);

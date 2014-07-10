@@ -5,6 +5,19 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 import gtk
 import yaml
+import collections
+import os
+
+_mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
+
+def dict_representer(dumper, data):
+    return dumper.represent_mapping(_mapping_tag, data.iteritems())
+
+def dict_constructor(loader, node):
+    return collections.OrderedDict(loader.construct_pairs(node))
+
+yaml.add_representer(collections.OrderedDict, dict_representer)
+yaml.add_constructor(_mapping_tag, dict_constructor)
 
 def save(da):
     message = da.split(',')
@@ -21,6 +34,12 @@ def save(da):
 
     with open('/dev/shm/TrackerBox2_parameters.yaml', 'w') as outfile:
         outfile.write( yaml.dump(data_file, default_flow_style=False) )
+        # Line ending because vim was angry
+        outfile.write("\n")
+
+    # Make the file satanic
+    os.chmod('/dev/shm/TrackerBox2_parameters.yaml', 0666)
+
 
 class MyDBUSService(dbus.service.Object):
     def __init__(self):
