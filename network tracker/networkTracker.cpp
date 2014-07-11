@@ -237,7 +237,7 @@ int main( int argc, char** argv )
 		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
 		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
 		#if SHOW_GUI
-			//~ cvShowImage("Raw Image", frame);
+			cvShowImage("Raw Image", frame);
 			cvShowImage("Binary Mask", maskPlusCOM);
 		#endif
 		
