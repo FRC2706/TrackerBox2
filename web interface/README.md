@@ -1,1 +1,1 @@
-Alex: place all the web interface code in here!
+Use symlinks to /dev/shm as much as possible

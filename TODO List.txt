@@ -33,3 +33,8 @@ With cRIO:
 - test and update Java wrapper
 - write & test c++ wrapper
 - write & test LabView wrapper
+
+Notes for Pi image setup:
+-needs permissions for cgi-bin scripts
+-default user needs permission to own services in dbus SystemBus
+-apache user needs permission to run methods over SystemBus

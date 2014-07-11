@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>TrackerBox2</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<link rel="stylesheet" type="text/css" href="dhtmlxslider.css"/>
+	<script src="dhtmlxslider.js"></script>
+    <script src="jquery.js"></script>
+	<style>
+		#sliderObj, #sliderObj2, #sliderObj3, #sliderObj4 {
+			width: 160px;
+			height: 30px;
+		}
+		#sliderLink, #sliderLink2, #sliderLink3, #sliderLink4 {
+			font-size: 11px;
+			font-family: sans-serif;
+		}
+		table.demo_table td {
+			text-align: left;
+			vertical-align: top;
+			padding-right: 10px;
+		}
+		
+	</style>
+	<script>
+		var mySlider, mySlider2, mySlider3;
+        var piIp = location.host;
+        var d = false;
+		
+		function doOnLoad(){
+            
+			mySlider = new dhtmlXSlider({
+				parent: "sliderObj",
+				linkTo: "sliderLink"
+			});
+            mySlider.setMax(255);
+            
+            mySlider4 = new dhtmlXSlider("sliderObj4");
+            
+            mySlider.attachEvent("onChange", function(value){
+				sendIt({
+					profile: mySlider4.getValue(),
+                    val: 0,
+					arg: mySlider.getValue()
+				});
+			});
+			
+			mySlider2 = new dhtmlXSlider("sliderObj2");
+            mySlider2.setMax(255);
+			mySlider2.linkTo("sliderLink2");
+            
+            mySlider2.attachEvent("onChange", function(value){
+				sendIt({
+					profile: mySlider4.getValue(),
+                    val: 1,
+					arg: mySlider2.getValue()
+				});
+			});
+			
+			mySlider3 = new dhtmlXSlider("sliderObj3");
+            mySlider3.setMax(25);
+            mySlider3.linkTo("sliderLink3");
+            
+            mySlider3.attachEvent("onChange", function(value){
+				sendIt({
+					profile: mySlider4.getValue(),
+                    val: 2,
+					arg: mySlider3.getValue()
+				});
+			});
+            
+            mySlider4.attachEvent("onChange", function(value){
+                getOldData(mySlider4.getValue());
+				sendIt({
+					profile: mySlider4.getValue(),
+                    val: 3,
+					arg: mySlider4.getValue()
+				});
+			});
+            
+            mySlider4.setMax(9);
+            getOldData(0);
+		};
+		
+		function doOnUnload(){
+			if (mySlider != null){
+				mySlider.unload();
+				mySlider = null;
+			}
+			if (mySlider2 != null){
+				mySlider2.unload();
+				mySlider2 = null;
+			}
+			if (mySlider3 != null){
+				mySlider3.unload();
+				mySlider3 = null;
+			}
+		};
+        
+        function getOldData(prof){
+            $.ajax({
+                url: "http://"+piIp+"/cgi-bin/loadval.py",
+                type: "post",
+                data: {
+                    a: prof
+                },
+                success: function(response){
+                    console.log(response);
+                    var oldval = response.split(',');
+                    if (d != true) {
+                        d = true;
+                        getOldData(oldval[3])
+                    }
+                    mySlider4.setValue(oldval[3]);
+                    mySlider.setValue(oldval[0]);
+                    mySlider2.setValue(oldval[1]);
+                    mySlider3.setValue(oldval[2]);
+                }
+            });
+        };
+        
+        function refreshIt(element) {
+                setTimeout(function() {
+                    element.src = element.src.split('?')[0] + '?' + new Date().getTime();
+                    refreshIt(element);
+                }, 200); // This is the refresh rate. Set it really low if you want to DOS yourself!
+            }
+        
+        function sendIt(data){
+            $.ajax({
+                url: "http://"+piIp+"/cgi-bin/script.py",
+                type: "post",
+                data: {
+                    a: data.profile,
+                    b: data.val,
+                    c: data.arg
+                },
+                success: function(response){
+                    console.log(response);
+                }
+            });
+        }
+	</script>
+</head>
+<body onload="doOnLoad();" onunload="doOnUnload();">
+	<table cellspacing="0" cellpadding="0" border="0" class="demo_table">
+		<tr>
+            <td><H4>minH</H4></td>
+        </tr><tr>
+			<td><div id="sliderObj"></div></td>
+			<td><div id="sliderLink"></div></td>
+		</tr><tr>
+            <td><H4>maxH</H4></td>
+        </tr><tr>
+			<td><div id="sliderObj2"></div></td>
+			<td><div id="sliderLink2"></div></td>
+		</tr><tr>
+            <td><H4>size of noise filter pass</H4></td>
+        </tr><tr>
+			<td><div id="sliderObj3" linkto="sliderLink3"></div></td>
+			<td><div id="sliderLink3"></div></td>
+        </tr><tr>
+            <td><H4>Profile #</H4></td>
+        </tr><tr>
+			<td><div id="sliderObj4" linkto="sliderLink4"></div></td>
+			<td><div id="sliderLink4"></div></td>
+		</tr>
+	</table>
+    <img src="TrackerBox2_maskPlusCOM.jpg" name="preview" onload="refreshIt(this)">
+</body>
+</html>
