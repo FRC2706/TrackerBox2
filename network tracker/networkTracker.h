@@ -37,8 +37,7 @@ struct ProfileParameters {
 	int minH;
 	int maxH;
 	int noiseFilterSize;
-	int smootherSize;
-
+	int smootherSize; // Do I still use this?
 };
 
 struct Parameters {

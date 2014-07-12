@@ -1,4 +1,5 @@
 #!/bin/bash
 
-cp *.html *.css *.js /var/www/html/
-sudo chmod a+rx *
+sudo rm /var/www/html/*
+sudo cp *.html *.css *.js /var/www/html/
+sudo chmod a+rx /var/www/html/*

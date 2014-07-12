@@ -140,13 +140,13 @@ int main( int argc, char** argv )
 	
 	// now the OpenCV stuff
 	#if SHOW_GUI
-	cvNamedWindow("Binary Mask", CV_WINDOW_AUTOSIZE);
-	cvCreateTrackbar( "minH", "Binary Mask", &activeProfile.minH, 255, writeParams);
-	cvCreateTrackbar( "maxH", "Binary Mask", &activeProfile.maxH, 255, writeParams);
-	cvCreateTrackbar( "size of noise filter pass", "Binary Mask", &activeProfile.noiseFilterSize, 25, writeParams);
-	//cvCreateTrackbar( "size of smoother pass", "Binary Mask", &activeProfile.smootherSize, 25, writeParams);
-	cvCreateTrackbar( "Profile #", "Binary Mask", &activeProfileSlider, 9, changeProfile);
-	cvWaitKey(5);
+		cvNamedWindow("Binary Mask", CV_WINDOW_AUTOSIZE);
+		cvCreateTrackbar( "minH", "Binary Mask", &activeProfile.minH, 255, writeParams);
+		cvCreateTrackbar( "maxH", "Binary Mask", &activeProfile.maxH, 255, writeParams);
+		cvCreateTrackbar( "size of noise filter pass", "Binary Mask", &activeProfile.noiseFilterSize, 25, writeParams);
+		//cvCreateTrackbar( "size of smoother pass", "Binary Mask", &activeProfile.smootherSize, 25, writeParams);
+		cvCreateTrackbar( "Profile #", "Binary Mask", &activeProfileSlider, 9, changeProfile);
+		cvWaitKey(5);
 	#endif
     
     // copy the parameters.yaml file from the local dir to ramdisk at /dev/shm
@@ -180,13 +180,13 @@ int main( int argc, char** argv )
 	IplImage* mask;
 	IplImage* mask1;
 	IplImage* mask2;
-		
-	//~ initializeMats(frame);
 
 	#if PRINT_FPS
 	timeval start, ends;
 	gettimeofday(&start, 0);
 	#endif
+	
+	// Main frame loop
 	while(1) {
 		frame = cvQueryFrame( capture );
 		
@@ -194,11 +194,9 @@ int main( int argc, char** argv )
 		updateTrackbars();
 		
 		#if PRINT_FPS
-		gettimeofday(&ends, 0);
-		cout << "FPS: " << 1.0 / ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000) << endl;
-		
-		
-		start = ends;
+			gettimeofday(&ends, 0);
+			cout << "FPS: " << 1.0 / ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000) << endl;
+			start = ends;
 		#endif
 		
 		// Do some processing on the image
@@ -226,8 +224,6 @@ int main( int argc, char** argv )
 		}
 		
 		cvSmooth(mask, mask, CV_MEDIAN, 2*activeProfile.noiseFilterSize+1);
-		
-//		cvShowImage("Binary Mask", mask);
 		
 		// compute the center of mass of the target we found
 		computeParticleReport(mask);
