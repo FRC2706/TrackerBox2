@@ -36,50 +36,21 @@
             mySlider.setMax(255);
             
             mySlider4 = new dhtmlXSlider("sliderObj4");
-            
-            mySlider.attachEvent("onChange", function(value){
-				sendIt({
-					profile: mySlider4.getValue(),
-                    val: 0,
-					arg: mySlider.getValue()
-				});
-			});
 			
 			mySlider2 = new dhtmlXSlider("sliderObj2");
             mySlider2.setMax(255);
 			mySlider2.linkTo("sliderLink2");
-            
-            mySlider2.attachEvent("onChange", function(value){
-				sendIt({
-					profile: mySlider4.getValue(),
-                    val: 1,
-					arg: mySlider2.getValue()
-				});
-			});
 			
 			mySlider3 = new dhtmlXSlider("sliderObj3");
             mySlider3.setMax(25);
             mySlider3.linkTo("sliderLink3");
             
-            mySlider3.attachEvent("onChange", function(value){
-				sendIt({
-					profile: mySlider4.getValue(),
-                    val: 2,
-					arg: mySlider3.getValue()
-				});
-			});
+            mySlider4.setMax(9);
+            getOldData(0);
             
             mySlider4.attachEvent("onChange", function(value){
                 getOldData(mySlider4.getValue());
-				sendIt({
-					profile: mySlider4.getValue(),
-                    val: 3,
-					arg: mySlider4.getValue()
-				});
 			});
-            
-            mySlider4.setMax(9);
-            getOldData(0);
 		};
 		
 		function doOnUnload(){
@@ -109,9 +80,9 @@
                     var oldval = response.split(',');
                     if (d != true) {
                         d = true;
+                        mySlider4.setValue(oldval[3]);
                         getOldData(oldval[3])
                     }
-                    mySlider4.setValue(oldval[3]);
                     mySlider.setValue(oldval[0]);
                     mySlider2.setValue(oldval[1]);
                     mySlider3.setValue(oldval[2]);
@@ -123,17 +94,18 @@
                 setTimeout(function() {
                     element.src = element.src.split('?')[0] + '?' + new Date().getTime();
                     refreshIt(element);
-                }, 200); // This is the refresh rate. Set it really low if you want to DOS yourself!
+                }, 1000); // This is the refresh rate. Set it really low if you want to DOS yourself!
             }
         
-        function sendIt(data){
+        function sendIt(){
             $.ajax({
                 url: "http://"+piIp+"/cgi-bin/script.py",
                 type: "post",
                 data: {
-                    a: data.profile,
-                    b: data.val,
-                    c: data.arg
+                    a: mySlider4.getValue(),
+                    b: mySlider.getValue(),
+                    c: mySlider2.getValue(),
+                    d: mySlider3.getValue()
                 },
                 success: function(response){
                     console.log(response);
@@ -164,7 +136,9 @@
         </tr><tr>
 			<td><div id="sliderObj4" linkto="sliderLink4"></div></td>
 			<td><div id="sliderLink4"></div></td>
-		</tr>
+		</tr><tr>
+            <td><button name="button" onclick="sendIt();">Save</button></td>
+        </tr>
 	</table>
     <img src="TrackerBox2_maskPlusCOM.jpg" name="preview" onload="refreshIt(this)">
 </body>

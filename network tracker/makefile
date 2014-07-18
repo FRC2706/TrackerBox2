@@ -9,7 +9,7 @@ OpenCVLibs = `pkg-config --libs opencv`
 YAMLLibs = `pkg-config --libs yaml-cpp`
 	
 networkTracker: networkTracker.cpp networkTracker.h networkTrackerYAML_utils.o
-	$(Cxx) $(CXXFLAGS) -O3 $^ -o $@ $(OpenCVLibs) $(YAMLLibs) -lpthread
+	$(Cxx) $(CXXFLAGS) -O3 $^ -o $@ $(OpenCVLibs) $(YAMLLibs) -lpthread -lzmq
 	
 networkTrackerYAML_utils.o: networkTrackerYAML_utils.h networkTrackerYAML_utils.cpp
 	$(Cxx) $(CXXFLAGS) -O3 -c $^  $(YAMLLibs)

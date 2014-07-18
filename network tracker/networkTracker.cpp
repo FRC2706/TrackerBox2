@@ -32,6 +32,7 @@
 #include <sys/time.h>
 #include <pthread.h>	// light multi-threading library
 #include "yaml-cpp/yaml.h"
+#include <zmq.hpp>
 
 #define SHOW_GUI 1
 #define PRINT_FPS 1
@@ -46,8 +47,6 @@ pthread_mutex_t paramsMutex = PTHREAD_MUTEX_INITIALIZER;
 
 ParticleReport mostRecentPR;
 pthread_mutex_t mostRecentPRMutex = PTHREAD_MUTEX_INITIALIZER;
-
-
 
 // This is just here for posterity - turns out that the matrix algebra is actually slower than the loops. *sigh*
 
@@ -69,6 +68,8 @@ pthread_mutex_t mostRecentPRMutex = PTHREAD_MUTEX_INITIALIZER;
 		//~ }		
 	//~ }
 //~ }
+
+
 
 void writeParams(int x) { 
 	pthread_mutex_lock( &paramsMutex );
@@ -119,6 +120,32 @@ void loadParams() {
 //	updateTrackbars();
 }
 
+void *check_zmqstuff(void *thing) 
+{
+	while (1){
+		zmq::context_t context (1);
+	    zmq::socket_t socket (context, ZMQ_REP);
+	    socket.bind ("tcp://*:5555");
+	    zmq::message_t request;
+	    socket.recv (&request);
+	    //std::cout << "Received request: [" << (char*) request.data() << "]" << std::endl;
+	    std::string input = (char*) request.data();
+		std::vector<int> output;
+		for(std::string::size_type p0=0,p1=input.find(',');
+        		p1!=std::string::npos || p0!=std::string::npos;
+        		(p0=(p1==std::string::npos)?p1:++p1),p1=input.find(',',p0) )
+    		output.push_back( strtol(input.c_str()+p0,NULL,0) );
+    	
+    	pthread_mutex_lock( &paramsMutex );
+		p.activeProfileIdx = output[0];
+		p.profiles[p.activeProfileIdx].minH = output[1];
+		p.profiles[p.activeProfileIdx].maxH = output[2];
+		p.profiles[p.activeProfileIdx].noiseFilterSize = output[3];
+		writeParametersToFile(p);
+		pthread_mutex_unlock( &paramsMutex );
+	}
+}
+
 CvPoint COM_center;
 
 int main( int argc, char** argv )
@@ -161,7 +188,11 @@ int main( int argc, char** argv )
 	pthread_mutex_unlock( &paramsMutex );
 
 	IplImage* frame;
-	CvCapture* capture;
+    CvCapture* capture;
+
+    // http://i.imgur.com/5aEOlcW.jpg
+    pthread_t thread1;
+    pthread_create (&thread1, NULL, check_zmqstuff, NULL);
 
 
 	// TODO: Select which camera in the GUI. This will need some non-trivial changes to allow it on the fly.
