@@ -51,6 +51,9 @@
             mySlider4.attachEvent("onChange", function(value){
                 getOldData(mySlider4.getValue());
 			});
+            
+            mySlider.setSize(200);
+            mySlider2.setSize(200);
 		};
 		
 		function doOnUnload(){
@@ -122,14 +125,14 @@
 			<td><div id="sliderObj"></div></td>
 			<td><div id="sliderLink"></div></td>
 		</tr><tr>
-            <td><img src="hue.jpg" width="21%" height="15%"/></td>
+            <td><img id="hue1" src="hue.jpg" width="200px" height="15%"/></td>
         </tr><tr>
             <td><H4>maxH</H4></td>
         </tr><tr>
 			<td><div id="sliderObj2"></div></td>
 			<td><div id="sliderLink2"></div></td>
 		</tr><tr>
-            <td><img src="hue.jpg" width="21%" height="15%"/></td>
+            <td><img id="hue2" src="hue.jpg" width="200px" height="15%"/></td>
         </tr><tr>
             <td><H4>size of noise filter pass</H4></td>
         </tr><tr>
