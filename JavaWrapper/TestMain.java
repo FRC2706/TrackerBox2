@@ -4,7 +4,7 @@
 public class TestMain {
 
 	public static void main(String[] args) {
-		TrackerBox2 tb = new TrackerBox2( "192.168.2.10");
+		TrackerBox2 tb = new TrackerBox2( "127.0.0.1");
 //		tb.changeProfile(3);
 		while(true) {
 			try {

@@ -18,9 +18,9 @@ Profile2:
   noiseFilterSize: 14
   smootherSize: 9
 Profile3:
-  minH: 31
-  maxH: 14
-  noiseFilterSize: 20
+  minH: 44
+  maxH: 81
+  noiseFilterSize: 3
   smootherSize: 2
 Profile4:
   minH: 163

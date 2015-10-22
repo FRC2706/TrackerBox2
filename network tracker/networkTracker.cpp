@@ -196,6 +196,10 @@ int main( int argc, char** argv )
 
 
 	// TODO: Select which camera in the GUI. This will need some non-trivial changes to allow it on the fly.
+	// or just take in order of preference:
+	//  - USB cam
+	//  - AxisCam
+	//  - Laptop cam
 	
 	//~ printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
 	//~ cout.flush();
