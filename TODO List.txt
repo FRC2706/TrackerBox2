@@ -10,13 +10,11 @@ Things TODO on this project:
 
 - [Mike / Alex] : Add the opencv Hue rainbow to the sliders
 
-- Test on different boards.
+- Test on different boards?
 
-- Textbox showing PI's current IP && EntryBox "Enter Team Number" && Button "Set Pi's IP"
+- On the web page, have a button "Settings" which takes you to a page with "Team Number", and IP addresses for "RPi IP", "AxisCam IP", and "RoboRio IP" (all defaulting to 10.TE.AM.___ but completely editable)
 
-- OPtimize frame-rate?
-
-- Live CD version?
+- Optimize frame-rate by reducing image resolution?
 
 
 Features to add (feel free to add items Alex)
