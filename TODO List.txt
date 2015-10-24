@@ -6,7 +6,7 @@ Things TODO on this project:
 
 	- [Mike] : Still need to clean up / comment networkTracker.cpp
 
-- [Alex] : add a toggle on the web interface for "IP Axis Cam" or "USB Cam"
+- [Alex] : add a toggle on the web interface for "IP Axis Cam" or "USB Cam" ... or just hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
 
 - [Mike / Alex] : Add the opencv Hue rainbow to the sliders
 
