@@ -28,6 +28,8 @@
 
 - [Morgan] hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
 
+- [Morgan] Add (smoothed) fps to the particleReport
+
 
 ## With cRIO (to let more teams use it):
 - test and update Java wrapper
