@@ -6,7 +6,16 @@ A camera-based object tracker for use in the FIRST Robotics Competition
 This project is being worked on by Mike Ounsworth and Alex Huctwith on FRC team 3710.
 
 
+## Dependencies
+
+Linux packages that need to be installed:
+  - libyaml-cpp-dev
+  - libboost-dev
+  - libopencv-dev
+
+
 ~~ This will need a longer description on how to compile the code, a brief guide to using it (ie calibration etc) and a link to the paper, once published ~~
+
 
 # GPLv3 license stuff
 
