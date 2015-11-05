@@ -48,30 +48,8 @@ pthread_mutex_t paramsMutex = PTHREAD_MUTEX_INITIALIZER;
 ParticleReport mostRecentPR;
 pthread_mutex_t mostRecentPRMutex = PTHREAD_MUTEX_INITIALIZER;
 
-// This is just here for posterity - turns out that the matrix algebra is actually slower than the loops. *sigh*
 
-//~ /** These matrices are the same size as the image and store the x-coords and y-coords of each point respectively.
- //~ * They are used for computing the centre of mass of the mask **/
-//~ Mat* Xidxs;
-//~ Mat* Yidxs;
-//~ 
-//~ void initializeMats(IplImage* frame) {
-	//~ Xidxs = new Mat(cvSize(frame->width, frame->height), CV_32FC1);
-	//~ Yidxs = new Mat(cvSize(frame->width, frame->height), CV_32FC1);
-	//~ 
-	//~ // this could be done more efficiently by tiling or repeating vectors using opencv calls, 
-	//~ // but I'm not super concerned with runtime of a one-time thing.
-	//~ for(int i=0; i < frame->width; i++) {
-		//~ for(int j=0; j < frame->height; j++) {			
-			//~ Xidxs->at<float>(j,i) = i;
-			//~ Yidxs->at<float>(j,i) = j;
-		//~ }		
-	//~ }
-//~ }
-
-
-
-void writeParams(int x) { 
+void writeParams(int x) {
 	pthread_mutex_lock( &paramsMutex );
 	p.profiles[p.activeProfileIdx] = activeProfile;
 	writeParametersToFile(p);
@@ -90,7 +68,7 @@ void updateTrackbars() {
 	#endif
 }
 
-/** Make sure you call 
+/** Make sure you call
   *	pthread_mutex_lock( &paramsMutex );
   * before you call me!
   */
@@ -98,14 +76,14 @@ void changeProfile(int x) {
 	p.profiles[p.activeProfileIdx] = activeProfile;
 	p.activeProfileIdx = activeProfileSlider;
 	activeProfile = p.profiles[p.activeProfileIdx];
-	
+
 	writeParametersToFile(p);
-	
+
 	updateTrackbars();
 }
 
 
-/** Make sure you call 
+/** Make sure you call
   *	pthread_mutex_lock( &paramsMutex );
   * before you call me!
   */
@@ -120,7 +98,7 @@ void loadParams() {
 //	updateTrackbars();
 }
 
-void *check_zmqstuff(void *thing) 
+void *check_zmqstuff(void *thing)
 {
 	while (1){
 		zmq::context_t context (1);
@@ -135,7 +113,7 @@ void *check_zmqstuff(void *thing)
         		p1!=std::string::npos || p0!=std::string::npos;
         		(p0=(p1==std::string::npos)?p1:++p1),p1=input.find(',',p0) )
     		output.push_back( strtol(input.c_str()+p0,NULL,0) );
-    	
+
     	pthread_mutex_lock( &paramsMutex );
 		p.activeProfileIdx = output[0];
 		p.profiles[p.activeProfileIdx].minH = output[1];
@@ -144,6 +122,7 @@ void *check_zmqstuff(void *thing)
 		writeParametersToFile(p);
 		pthread_mutex_unlock( &paramsMutex );
 	}
+	return NULL;
 }
 
 CvPoint COM_center;
@@ -154,17 +133,17 @@ int main( int argc, char** argv )
 	pthread_t threadChangeProfile;
 	pthread_t threadDataRequest;
 	int rc;
-	
+
 	rc = pthread_create(&threadChangeProfile, NULL, runChangeProfileServer, NULL);
 	if (rc){
          cout << "Error:unable to create thread for the Change Profile Server,"<< endl;
 	}
-	
+
 	rc = pthread_create(&threadDataRequest, NULL, runDataRequestServer, NULL);
 	if (rc){
          cout << "Error:unable to create thread for the Data Request Server,"<< endl;
 	}
-	
+
 	// now the OpenCV stuff
 	#if SHOW_GUI
 		cvNamedWindow("Binary Mask", CV_WINDOW_AUTOSIZE);
@@ -175,15 +154,15 @@ int main( int argc, char** argv )
 		cvCreateTrackbar( "Profile #", "Binary Mask", &activeProfileSlider, 9, changeProfile);
 		cvWaitKey(5);
 	#endif
-    
+
     // copy the parameters.yaml file from the local dir to ramdisk at /dev/shm
 	std::ifstream  src("TrackerBox2_parameters.yaml", std::ios::binary);
 	std::ofstream  dst("/dev/shm/TrackerBox2_parameters.yaml",   std::ios::binary);
 	dst << src.rdbuf();
 	src.close();
 	dst.close();
-    
-    pthread_mutex_lock( &paramsMutex );    
+
+    pthread_mutex_lock( &paramsMutex );
 	loadParams();
 	pthread_mutex_unlock( &paramsMutex );
 
@@ -200,7 +179,7 @@ int main( int argc, char** argv )
 	//  - USB cam
 	//  - AxisCam
 	//  - Laptop cam
-	
+
 	//~ printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
 	//~ cout.flush();
 	//~ capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str());
@@ -209,9 +188,9 @@ int main( int argc, char** argv )
 	cout.flush();
 	capture = cvCaptureFromCAM(0); // laptop's webcam
 	printf("Done!\n\n\n");
-	
+
 	frame = cvQueryFrame( capture );
-	 
+
 	IplImage* mask;
 	IplImage* mask1;
 	IplImage* mask2;
@@ -220,49 +199,49 @@ int main( int argc, char** argv )
 	timeval start, ends;
 	gettimeofday(&start, 0);
 	#endif
-	
+
 	// Main frame loop
 	while(1) {
 		frame = cvQueryFrame( capture );
-		
+
 		loadParams();
 		updateTrackbars();
-		
+
 		#if PRINT_FPS
 			gettimeofday(&ends, 0);
 			cout << "FPS: " << 1.0 / ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000) << endl;
 			start = ends;
 		#endif
-		
+
 		// Do some processing on the image
-		
+
 		mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
-		
+
 		pthread_mutex_lock( &paramsMutex );
 		int minH = activeProfile.minH;
 		int maxH = activeProfile.maxH;
 		pthread_mutex_unlock( &paramsMutex );
-		
+
 		// Threshold the image (if min > max then take the outside region)
 		if (minH < maxH)
 			thresholdHSV(frame, mask, minH, maxH, 40, 255, 40, 255);
 		else {
 			mask1 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 			mask2 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
-			
+
 			thresholdHSV(frame, mask1, 0, maxH, 40, 255, 40, 255);
 			thresholdHSV(frame, mask2, minH, 255, 40, 255, 40, 255);
-			
+
 			cvOr(mask1, mask2, mask);
 			cvReleaseImage(&mask1);
 			cvReleaseImage(&mask2);
 		}
-		
+
 		cvSmooth(mask, mask, CV_MEDIAN, 2*activeProfile.noiseFilterSize+1);
-		
+
 		// compute the center of mass of the target we found
 		computeParticleReport(mask);
-		
+
 		// Now maybe draw a dot and arrow for the COM and vel
 		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
 		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
@@ -271,15 +250,15 @@ int main( int argc, char** argv )
 			cvShowImage("Raw Image", frame);
 			cvShowImage("Binary Mask", maskPlusCOM);
 		#endif
-		
+
 		// save both the raw image and maskPlusCOM to /tmp so that the web interface can show them
 		cvSaveImage("/dev/shm/TrackerBox2_rawImage.jpg", frame);
 		cvSaveImage("/dev/shm/TrackerBox2_maskPlusCOM.jpg", maskPlusCOM);
 		cvReleaseImage(&maskPlusCOM);
-		cvReleaseImage(&mask);	
+		cvReleaseImage(&mask);
 		cvWaitKey(5);
 	} // video frame loop
-	
+
 }
 
 /**
@@ -289,12 +268,12 @@ void computeParticleReport(IplImage* mask) {
 	pthread_mutex_lock( &mostRecentPRMutex );
 	ParticleReport prevReport = mostRecentPR;
 	pthread_mutex_unlock( &mostRecentPRMutex );
-	
+
 	ParticleReport pr;
-	
+
 	int xAccum, yAccum, areaAccum;
 	xAccum = yAccum = areaAccum = 0;
-	
+
 	// compute COM of the mask!
 	for (int i = 0; i < mask->width; i++)
 		for (int j = 0; j < mask->height; j++)
@@ -307,28 +286,28 @@ void computeParticleReport(IplImage* mask) {
 	// average
 	COM_center.x = pr.centerX = ((double) xAccum) / areaAccum;
 	COM_center.y = pr.centerY = ((double) yAccum) / areaAccum;
-	
+
 	// This is just here for posterity - turns out that the matrix algebra is actually slower than the loops. *sigh*
 	//~ COM_center.x = pr.centerX = mean(*Xidxs, Mat(mask)/255.0 ).val[0];
 	//~ COM_center.y = pr.centerY = mean(*Yidxs, Mat(mask)/255.0 ).val[0];
-	
+
 	// normalize to [-1, 1]
 	pr.centerX = (( 2*pr.centerX / mask->width) - 1);
 	pr.centerY = (( 2*pr.centerY / mask->height) - 1);
 	pr.area = ((double) cvCountNonZero(mask)) / (mask->width*mask->height);
-	
+
 	// smooth a little bit
 	float alpha = 0.4;
 	pr.velX = alpha*(pr.centerX - prevReport.centerX) + (1-alpha)*prevReport.velX;
 	pr.velY = alpha*(pr.centerY - prevReport.centerY) + (1-alpha)*prevReport.velY;
-	
+
 	// check for NANs (ie divide-by-zero) - this is probably completely unnecessary
 	if(isnan(pr.centerX)) pr.centerX = 0.0;
 	if(isnan(pr.centerY)) pr.centerY = 0.0;
 	if(isnan(pr.area)) pr.area = 0.0;
 	if(isnan(pr.velX)) pr.velX = 0.0;
 	if(isnan(pr.velY)) pr.velY = 0.0;
-	
+
 	pthread_mutex_lock( &mostRecentPRMutex );
 	mostRecentPR = pr;
 	writeParticleReportToFile(pr);
@@ -346,9 +325,9 @@ void thresholdHSV(IplImage* image, IplImage* mask, unsigned char minH, unsigned 
 	// convert image to HSV space
 	IplImage* hsv = cvCreateImage(cvGetSize(image), image->depth, 3);
 	cvCvtColor(image, hsv, CV_BGR2HSV);
-	
+
 	cvInRangeS(hsv, cvScalar(minH, minS, minV), cvScalar(maxH, maxS, maxV), mask);
-	    
+
     cvReleaseImage(&hsv);
 }
 
@@ -358,7 +337,7 @@ void thresholdHSV(IplImage* image, IplImage* mask, unsigned char minH, unsigned 
 void *runChangeProfileServer(void *placeHolder) {
 	printf("Listening on port %d"
 			" for requests to change vision profile.\n", SOCK_CHANGE_PROFILE_PORT);
-			
+
     int sockfd, newsockfd, portno, clilen;
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
@@ -376,7 +355,7 @@ void *runChangeProfileServer(void *placeHolder) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
- 
+
     /* Now bind the host address using bind() call.*/
     if (bind(sockfd, (struct sockaddr *) &serv_addr,
                           sizeof(serv_addr)) < 0)
@@ -393,9 +372,9 @@ void *runChangeProfileServer(void *placeHolder) {
 
 	while(1) {
 		/* Accept actual connection from the client */
-		newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
+		newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
 		                            (socklen_t *)&clilen);
-		if (newsockfd < 0) 
+		if (newsockfd < 0)
 		{
 		    perror("ERROR on accept");
 		    exit(1);
@@ -408,13 +387,13 @@ void *runChangeProfileServer(void *placeHolder) {
 		    perror("ERROR reading from socket");
 		    exit(1);
 		}
-		
-		
+
+
 		printf("Received %d bytes\n", n);
 
 		/* change the active profile in "parameters.yaml" */
 		int newProfile = buffer[2] - 48;
-		
+
 		if (newProfile >=0 && newProfile <10) {
 			printf("Received a request to switch to Profile%d\n",newProfile);
 //			Parameters p = loadParametersFromFile();
@@ -424,10 +403,10 @@ void *runChangeProfileServer(void *placeHolder) {
 			pthread_mutex_unlock( &paramsMutex );
 		} else {
 			printf("Received an invalid request\n");
-		}	
+		}
 		close(newsockfd);
 	}
-	
+
 	pthread_exit(0);
 }
 
@@ -437,7 +416,7 @@ void *runChangeProfileServer(void *placeHolder) {
 void *runDataRequestServer(void *placeHolder) {
 	printf("Listening on port %d"
 			" for requests to transmit data.\n", SOCK_CHANGE_DATA_REQUEST_PORT);
-			
+
     int sockfd, newsockfd, portno, clilen;
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
@@ -455,7 +434,7 @@ void *runDataRequestServer(void *placeHolder) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
- 
+
     /* Now bind the host address using bind() call.*/
     if (bind(sockfd, (struct sockaddr *) &serv_addr,
                           sizeof(serv_addr)) < 0)
@@ -471,35 +450,35 @@ void *runDataRequestServer(void *placeHolder) {
     clilen = sizeof(cli_addr);
 
 //	ParticleReport pr;
-	
+
 	while(1) {
 		printf("Waiting for new connection.\n");
 		/* Accept actual connection from the client */
-		newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
+		newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
 				                        (socklen_t *)&clilen);
-	
-		if (newsockfd < 0) 
+
+		if (newsockfd < 0)
 		{
 			perror("ERROR on accept");
 	//		    exit(1);
 			continue;
 		}
 		printf("Got a new connection!\n");
-		
+
 		struct timeval tv;
 		tv.tv_sec = 10; // 10 second timeout
 		tv.tv_usec = 0; // you need to initialize this
-		
+
 		setsockopt(newsockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(struct timeval));
-		
+
 	//	timeval start, ends;
 	//	gettimeofday(&start, 0);
 		while(1) {
 		    printf("Waiting for request.\n");
 			/* Accept actual connection from the client */
-	//		newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
+	//		newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
 	//		                            (socklen_t *)&clilen);
-	//		if (newsockfd < 0) 
+	//		if (newsockfd < 0)
 	//		{
 	//		    perror("ERROR on accept");
 	////		    exit(1);
@@ -507,7 +486,7 @@ void *runDataRequestServer(void *placeHolder) {
 	//		}
 	//		printf("Got a new connection!");
 			/* If connection is established then start communicating */
-			
+
 			memset(buffer, 0, 256);
 			n = recv( newsockfd,buffer,255,0 );
 			if (n <= 0)
@@ -518,22 +497,22 @@ void *runDataRequestServer(void *placeHolder) {
 			}
 
 			printf("Received a request for the particle data.\n");
-		
+
 			/* read the current particle report from "particleReport.yaml" and send it back */
 	//		gettimeofday(&ends, 0);
 	//		double elapsed = ( (double) (ends.tv_sec - start.tv_sec) + (double) (ends.tv_usec - start.tv_usec) / 1000000);
 	//		start = ends;
 	//		if (elapsed > 0.05) // if we try to read the YAML file while it's still being written from the last time, things get ugly.
 	//			pr = loadParticleReportFromFile();
-		
+
 			char msg[256];
-		
+
 			pthread_mutex_lock( &mostRecentPRMutex );
 			n = sprintf(msg, "%f,%f,%f,%f,%f", mostRecentPR.centerX, mostRecentPR.centerY, mostRecentPR.area, mostRecentPR.velX, mostRecentPR.velY);
 			pthread_mutex_unlock( &mostRecentPRMutex );
-		
+
 			printf("message to send: %s\n", msg);
-		
+
 			n = write(newsockfd,msg,n);
 			if (n < 0)
 			{
@@ -544,7 +523,7 @@ void *runDataRequestServer(void *placeHolder) {
 			printf("Sent!\n");
 		} // inner loop
 		close(newsockfd);
-		printf("Succesfully closed connection.\n");	
+		printf("Succesfully closed connection.\n");
 	} // outer loop
 	pthread_exit(0);
 }
