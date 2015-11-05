@@ -1,31 +1,31 @@
-Things TODO on this project:
+TODO list going into the 2016 season with Team 2706.
 
-- [Mike] : clean up code (open-source quality commenting, etc) and remove old or unused files.
+Web inferface tasks [Mike + Matt]:
+
+
+- [Matt] : add a toggle on the web interface for "IP Axis Cam" or "USB Cam" ... or just hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
+
+- [Mike] When changing the Pi's IP address, apache will need sudo power (or at least sudoers priviledge on `ifconfig` and `reboot`)
+
+- [Matt] On the web page, have a button "Settings" which takes you to a page with "Team Number", and IP addresses for "RPi IP", "AxisCam IP", and "RoboRio IP" (all defaulting to 10.TE.AM.___ but completely editable)
+
+- [Matt] Have a "Downscale" dropdown menu on the web interface?
+
+- [Matt] fps on the interface
+
+
+
+
+c++ code tasks [Mike / Kevin, Matt / Morgan]:
+
+
+- [Mike + Matt / Morgan] : clean up code (open-source quality commenting, etc) and remove old or unused files.
 	
-	- [Mike or Alex] : Update all the opencv data structures and function calls to the c++ api. (currently it's a mashup of the c and c++ api's)
+- [Mike + Matt / Morgan, high priority] update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
 
-	- [Mike] : Still need to clean up / comment networkTracker.cpp
+- [Mike, low priority] : Update all the opencv data structures and function calls to the c++ api. (currently it's a mashup of the c and c++ api's)
 
-- [Alex] : add a toggle on the web interface for "IP Axis Cam" or "USB Cam" ... or just hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
-
-- [Mike / Alex] : Add the opencv Hue rainbow to the sliders
-
-- Test on different boards?
-
-- On the web page, have a button "Settings" which takes you to a page with "Team Number", and IP addresses for "RPi IP", "AxisCam IP", and "RoboRio IP" (all defaulting to 10.TE.AM.___ but completely editable)
-
-- Optimize frame-rate by reducing image resolution?
-
-
-Features to add (feel free to add items Alex)
-- fps on the interface
-- multiple colours ranges in one profile? (have a button to add a additional colour, can do this an arbitrary number of times ?)
-
-- [Alex] : Think up a way to set the ip of the rpi to the team number, ie 10.XX.YY.28 or something, without the user having to put a monitor on the rpi.
-	- maybe the image we ship has it default to 192.168.0.20 and the first time you connect to the web interface it prompts you for your team number?
-	- can we find a better way?
-
-
+- [Morgan] Optimize frame-rate by reducing image resolution?
 
 
 With cRIO:
@@ -41,8 +41,3 @@ Notes for Pi image setup:
 
 Stuff that's Done! :
 
-- (DONE!) [Mike] : HSV wrap-around (ie if min > max then take everything < max and > min)
-- (DONE!: turned out not to help) [Mike] : get rid of as many loops as possible by replacing them with matrix (linear algebra) operations.
-- (DONE!) [Mike] : rm networkTracker.*; mv networkTracker_withServer.* -> networkTracker.*
-- (DONE!) [Mike] : save yaml files and images (raw + backproj + anything else) to file in /tmp at each frame
-- (DONE!) [Alex] : write a web interface that mirrors the opencv interface

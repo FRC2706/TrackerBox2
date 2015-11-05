@@ -9,7 +9,7 @@ This project is being worked on by Mike Ounsworth and Alex Huctwith on FRC team 
 ## Dependencies
 
 Linux packages that need to be installed:
-  - libyaml-cpp-dev
+  - libyaml-cpp0.3-dev
   - libboost-dev
   - libopencv-dev
 
