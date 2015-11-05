@@ -1,7 +1,8 @@
-TODO list going into the 2016 season with Team 2706.
+# TODO list going into the 2016 season with Team 2706.
 
-Web inferface tasks [Mike + Matt]:
+## Web interface tasks [Mike + Matt]:
 
+- [Matt] Replace the "Profile #" slider with a dropdown list
 
 - [Matt] : add a toggle on the web interface for "IP Axis Cam" or "USB Cam" ... or just hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
 
@@ -16,11 +17,11 @@ Web inferface tasks [Mike + Matt]:
 
 
 
-c++ code tasks [Mike / Kevin, Matt / Morgan]:
+## C++ code tasks [Mike / Kevin, Matt / Morgan]:
 
 
 - [Mike + Matt / Morgan] : clean up code (open-source quality commenting, etc) and remove old or unused files.
-	
+
 - [Mike + Matt / Morgan, high priority] update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
 
 - [Mike, low priority] : Update all the opencv data structures and function calls to the c++ api. (currently it's a mashup of the c and c++ api's)
@@ -28,7 +29,7 @@ c++ code tasks [Mike / Kevin, Matt / Morgan]:
 - [Morgan] Optimize frame-rate by reducing image resolution?
 
 
-With cRIO:
+## With cRIO (to let more teams use it):
 - test and update Java wrapper
 - write & test c++ wrapper
 - write & test LabView wrapper
@@ -39,5 +40,4 @@ Notes for Pi image setup:
 -apache user needs permission to run methods over SystemBus
 
 
-Stuff that's Done! :
-
+## Stuff that's Done! :
