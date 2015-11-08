@@ -2,15 +2,16 @@
 
 ## Web interface tasks [Mike + Matt]:
 
-- [Matt] Replace the "Profile #" slider with a dropdown list
 
-- [Mike] When changing the Pi's IP address, apache will need sudo power (or at least sudoers priviledge on `ifconfig` and `reboot`)
+- Replace the "Profile #" slider with a dropdown list
 
-- [Matt] On the web page, have a button "Settings" which takes you to a page with "Team Number", and IP addresses for "RPi IP", "AxisCam IP", and "RoboRio IP" (all defaulting to 10.TE.AM.___ but completely editable)
+- When changing the Pi's IP address, apache will need sudo power (or at least sudoers priviledge on `ifconfig` and `reboot`)
 
-- [Matt] Have a "Downscale" dropdown menu on the web interface?
+- On the web page, have a button "Settings" which takes you to a page with "Team Number", and IP addresses for "RPi IP", "AxisCam IP", and "RoboRio IP" (all defaulting to 10.TE.AM.___ but completely editable)
 
-- [Matt] fps on the interface
+- Have a "Downscale" dropdown menu on the web interface?
+
+- add fps on the interface
 
 
 
@@ -18,17 +19,17 @@
 ## C++ code tasks [Mike / Kevin, Matt / Morgan]:
 
 
-- [Mike + Matt / Morgan] : clean up code (open-source quality commenting, etc) and remove old or unused files.
+- clean up code (open-source quality commenting, etc) and remove old or unused files.
 
-- [Mike + Matt / Morgan, high priority] update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
+- update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
 
-- [Mike, low priority] : Update all the opencv data structures and function calls to the c++ api. (currently it's a mashup of the c and c++ api's)
+- Update all the opencv data structures and function calls to the c++ api. (currently it's a mashup of the c and c++ api's)
 
-- [Morgan] Optimize frame-rate by reducing image resolution?
+- Optimize frame-rate by reducing image resolution?
 
-- [Morgan] hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
+- hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
 
-- [Morgan] Add (smoothed) fps to the particleReport
+- Add (smoothed) fps to the particleReport
 
 
 ## With cRIO (to let more teams use it):
@@ -42,4 +43,6 @@ Notes for Pi image setup:
 -apache user needs permission to run methods over SystemBus
 
 
-## Stuff that's Done! :
+
+
+
