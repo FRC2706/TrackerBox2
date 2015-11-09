@@ -31,6 +31,8 @@
 
 - Add (smoothed) fps to the particleReport
 
+- change the ramdisk params and particleReport files names from #define constants to being read from the params file
+
 
 ## With cRIO (to let more teams use it):
 - test and update Java wrapper
@@ -41,8 +43,3 @@ Notes for Pi image setup:
 -needs permissions for cgi-bin scripts
 -default user needs permission to own services in dbus SystemBus
 -apache user needs permission to run methods over SystemBus
-
-
-
-
-

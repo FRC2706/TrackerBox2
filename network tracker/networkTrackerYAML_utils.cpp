@@ -12,16 +12,16 @@ inline int clamp(int x, int a, int b) {
 
 void operator >> (const YAML::Node& node, IPParameters& p) {
 	node["AxisCamAddress"] 	>> p.axisCamAddr;
-	node["cRIO_IP"] 		>> p.cRIO_IP;
-	node["cRIO_port"] 		>> p.cRIO_port;
+	node["cRIO_IP"] 		    >> p.cRIO_IP;
+	node["cRIO_port"] 		  >> p.cRIO_port;
 }
 
 void operator >> (const YAML::Node& node, ProfileParameters& p) {
-    node["minH"] 			>> p.minH;
+  node["minH"] 			>> p.minH;
 	node["maxH"] 			>> p.maxH;
 	node["noiseFilterSize"] >> p.noiseFilterSize;
 	node["smootherSize"] 	>> p.smootherSize;
-	
+
 	// clamp the values to valid ranges
 	p.minH = clamp(p.minH, 0, 255);
 	p.maxH = clamp(p.maxH, 0, 255);
@@ -40,14 +40,14 @@ void operator >> (const YAML::Node& node, ParticleReport& pr) {
 bool operator == (Parameters& p1, Parameters& p2) {
 	if (p1.ipParams != p2.ipParams)
 		return false;
-	
+
 	if (p1.activeProfileIdx != p2.activeProfileIdx)
 		return false;
-	
+
 	for(int i=0; i<10; i++)
 		if (p1.profiles[i] != p2.profiles[i])
 			return false;
-	
+
 	return true;
 }
 
@@ -58,13 +58,13 @@ bool operator != (Parameters& p1, Parameters& p2) {
 bool operator == (IPParameters& ip1, IPParameters& ip2) {
 	if (ip1.axisCamAddr.compare(ip2.axisCamAddr) != 0)
 		return false;
-	
+
 	if (ip1.cRIO_IP.compare(ip2.cRIO_IP) != 0)
 		return false;
-		
+
 	if (ip1.cRIO_port.compare(ip2.cRIO_port) != 0)
 		return false;
-	
+
 	return true;
 }
 
@@ -75,10 +75,10 @@ bool operator != (IPParameters& ip1, IPParameters& ip2) {
 bool operator == (ProfileParameters& pp1, ProfileParameters& pp2) {
 	if (pp1.minH != pp2.minH || pp1.maxH != pp2.maxH)
 		return false;
-		
+
 	if (pp1.noiseFilterSize != pp2.noiseFilterSize || pp1.smootherSize != pp2.smootherSize)
 		return false;
-	
+
 	return true;
 }
 
@@ -88,7 +88,7 @@ bool operator != (ProfileParameters& pp1, ProfileParameters& pp2) {
 
 Parameters loadParametersFromFile() {
 	Parameters p;
-	
+
 	// check if the file exists on ramdisk, if not copy it from the sd card.
 	// The first time we run the loop we'll need to copy it over.
 	if( access( ramdiskParamsFile, F_OK ) == -1 ) {
@@ -100,30 +100,30 @@ Parameters loadParametersFromFile() {
 		src.close();
 		dst.close();
 	}
-	
+
 	// Open the file from the ramdisk
 	std::ifstream fin;
 	while( !fin.is_open())
 		fin.open(ramdiskParamsFile);
 	YAML::Parser parser(fin);
     fin.close();
-    
+
     // Use YAML tools to parse the file into c++ datastructures
     YAML::Node doc;
     parser.GetNextDocument(doc);
-    
+
     doc >> p.ipParams;
-    
+
     doc["ActiveProfileIdx"] >> p.activeProfileIdx;
     p.activeProfileIdx = clamp(p.activeProfileIdx, 0, 9);
-    
+
     for (int i = 0; i < 10; i++) {
     	std::stringstream profileName;
 		profileName << "Profile" << i;
-    	
+
     	doc[profileName.str().c_str()] >> p.profiles[i];
     }
-    
+
     return p;
 }
 
@@ -157,16 +157,16 @@ void writeParametersToFile(Parameters p) {
 						<< YAML::Value << p.profiles[i].smootherSize
 						<< YAML::EndMap;
 	}
-	
+
 	out << YAML::EndMap;
-	
+
 	ofstream myfile;
 	while(!myfile.is_open())
 		myfile.open (ramdiskParamsFile);
 	myfile << out.c_str();
 	myfile.close();
-	
-	
+
+
 	while(!myfile.is_open())
 		myfile.open (permanentParamsFile);
 	myfile << out.c_str();
@@ -175,17 +175,17 @@ void writeParametersToFile(Parameters p) {
 
 ParticleReport loadParticleReportFromFile() {
 	ParticleReport pr;
-	
+
 	std::ifstream fin;
 	while (!fin.is_open())
 		fin.open(ramdiskParamsFile);
     YAML::Parser parser(fin);
     fin.close();
-    
+
     YAML::Node doc;
     parser.GetNextDocument(doc);
     doc >> pr;
-    
+
     return pr;
 }
 
@@ -205,7 +205,7 @@ void writeParticleReportToFile(ParticleReport pr) {
 	out << YAML::Key << "velY";
 	out << YAML::Value << pr.velY;
 	out << YAML::EndMap;
-	
+
 	ofstream myfile;
 	while(!myfile.is_open())
 		myfile.open (ramdiskPartReportFile);
