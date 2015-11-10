@@ -1,7 +1,7 @@
 AxisCamAddress: http://10.2.96.11/mjpg/video.mjpg
 cRIO_IP: 10.2.96.2
 cRIO_port: 1180
-ActiveProfileIdx: 3
+ActiveProfileIdx: 1
 Profile0:
   minH: 100
   maxH: 105
@@ -18,19 +18,19 @@ Profile2:
   noiseFilterSize: 14
   smootherSize: 9
 Profile3:
-  minH: 44
-  maxH: 81
-  noiseFilterSize: 3
+  minH: 0
+  maxH: 255
+  noiseFilterSize: 25
   smootherSize: 2
 Profile4:
-  minH: 163
-  maxH: 182
-  noiseFilterSize: 2
+  minH: 0
+  maxH: 255
+  noiseFilterSize: 0
   smootherSize: 8
 Profile5:
-  minH: 99
-  maxH: 59
-  noiseFilterSize: 1
+  minH: 65
+  maxH: 36
+  noiseFilterSize: 0
   smootherSize: 2
 Profile6:
   minH: 67

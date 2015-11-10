@@ -1,6 +1,6 @@
 # TODO list going into the 2016 season with Team 2706.
 
-## Web interface tasks [Mike + Matt]:
+## Web interface tasks [Mike + Matt + Kevin + Others]:
 
 
 - Replace the "Profile #" slider with a dropdown list
@@ -16,7 +16,7 @@
 
 
 
-## C++ code tasks [Mike / Kevin, Matt / Morgan]:
+## C++ code tasks [Mike / Kevin, Matt / Morgan / Others]:
 
 
 - clean up code (open-source quality commenting, etc) and remove old or unused files.
@@ -41,8 +41,3 @@ Notes for Pi image setup:
 -needs permissions for cgi-bin scripts
 -default user needs permission to own services in dbus SystemBus
 -apache user needs permission to run methods over SystemBus
-
-
-
-
-
