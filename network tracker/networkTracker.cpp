@@ -89,10 +89,12 @@ void changeProfile(int x) {
   */
 void loadParams() {
 	Parameters newP = loadParametersFromFile();
+
 	if (newP != p) {
 		writeParametersToFile(newP);
 		p = newP;
 	}
+
 	activeProfile = p.profiles[p.activeProfileIdx];
 	activeProfileSlider = p.activeProfileIdx;
 //	updateTrackbars();
@@ -136,12 +138,12 @@ int main( int argc, char** argv )
 
 	rc = pthread_create(&threadChangeProfile, NULL, runChangeProfileServer, NULL);
 	if (rc){
-         cout << "Error:unable to create thread for the Change Profile Server,"<< endl;
+         cerr << "Error:unable to create thread for the Change Profile Server,"<< endl;
 	}
 
 	rc = pthread_create(&threadDataRequest, NULL, runDataRequestServer, NULL);
 	if (rc){
-         cout << "Error:unable to create thread for the Data Request Server,"<< endl;
+         cerr << "Error:unable to create thread for the Data Request Server,"<< endl;
 	}
 
 	// now the OpenCV stuff
@@ -150,7 +152,6 @@ int main( int argc, char** argv )
 		cvCreateTrackbar( "minH", "Binary Mask", &activeProfile.minH, 255, writeParams);
 		cvCreateTrackbar( "maxH", "Binary Mask", &activeProfile.maxH, 255, writeParams);
 		cvCreateTrackbar( "size of noise filter pass", "Binary Mask", &activeProfile.noiseFilterSize, 25, writeParams);
-		//cvCreateTrackbar( "size of smoother pass", "Binary Mask", &activeProfile.smootherSize, 25, writeParams);
 		cvCreateTrackbar( "Profile #", "Binary Mask", &activeProfileSlider, 9, changeProfile);
 		cvWaitKey(5);
 	#endif
@@ -162,16 +163,16 @@ int main( int argc, char** argv )
 	src.close();
 	dst.close();
 
-    pthread_mutex_lock( &paramsMutex );
+	pthread_mutex_lock( &paramsMutex );
 	loadParams();
 	pthread_mutex_unlock( &paramsMutex );
 
 	IplImage* frame;
-    CvCapture* capture;
+	CvCapture* capture;
 
-    // http://i.imgur.com/5aEOlcW.jpg
-    pthread_t thread1;
-    pthread_create (&thread1, NULL, check_zmqstuff, NULL);
+	// http://i.imgur.com/5aEOlcW.jpg
+	pthread_t thread1;
+	pthread_create (&thread1, NULL, check_zmqstuff, NULL);
 
 
 	// TODO: Select which camera in the GUI. This will need some non-trivial changes to allow it on the fly.
@@ -182,11 +183,15 @@ int main( int argc, char** argv )
 
 	//~ printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
 	//~ cout.flush();
-	//~ capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str());
-//	capture = cvCaptureFromFile("vid.avi");
-	printf("Opening USB webcam...");
+	//~ capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str()); // use the ethernet Axis Cam
+
+//	capture = cvCaptureFromFile("vid.avi"); // use a video file instead of a camera
+
+
+	printf("Opening USB / internal webcam...");
 	cout.flush();
-	capture = cvCaptureFromCAM(0); // laptop's webcam
+	capture = cvCaptureFromCAM(0); // usb / internal webcam
+
 	printf("Done!\n\n\n");
 
 	frame = cvQueryFrame( capture );

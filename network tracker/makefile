@@ -2,8 +2,8 @@
 Cxx=g++
 
 # 2. compiler flags
-CXXFLAGS = -Wall `pkg-config --cflags opencv yaml-cpp`
-VALGRIND_FLAGS = -g -O0
+CXXFLAGS = -Wall -O2 `pkg-config --cflags opencv yaml-cpp`
+VALGRIND_FLAGS = -Wall -g -O0 `pkg-config --cflags opencv yaml-cpp`
 
 # 3. libraries to link against
 OpenCVLibs = `pkg-config --libs opencv`
@@ -18,10 +18,10 @@ OUTPUT_EXE = networkTracker
 all: $(OUTPUT_EXE)
 
 $(OUTPUT_EXE): networkTracker.cpp networkTracker.h networkTrackerYAML_utils.o
-	$(Cxx) $(CXXFLAGS) -O2 $(filter-out %.h, $^) -o $@ $(OpenCVLibs) $(YAMLLibs) $(OTHERLibs)
+	$(Cxx) $(CXXFLAGS) $(filter-out %.h, $^) -o $@ $(OpenCVLibs) $(YAMLLibs) $(OTHERLibs)
 
 networkTrackerYAML_utils.o: networkTrackerYAML_utils.h networkTrackerYAML_utils.cpp
-	$(Cxx) $(CXXFLAGS) -O2 -c $(filter-out %.h, $^) $(YAMLLibs)
+	$(Cxx) $(CXXFLAGS) -c $(filter-out %.h, $^) $(YAMLLibs)
 
 clean:
 	rm -f *~ *.o $(OUTPUT_EXE)

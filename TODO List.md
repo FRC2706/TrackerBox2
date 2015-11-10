@@ -21,13 +21,10 @@
 
 - clean up code (open-source quality commenting, etc) and remove old or unused files.
 
-- update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
+- [Morgan] Optimize frame-rate by reducing image resolution?
+      This may have to wait until we have it running on a Raspberry Pi since it'll run too fast on a laptop for you to see any difference
 
-- Update all the opencv data structures and function calls to the c++ api. (currently it's a mashup of the c and c++ api's)
-
-- Optimize frame-rate by reducing image resolution?
-
-- hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
+- [Morgan] hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
 
 - Add (smoothed) fps to the particleReport
 
@@ -43,3 +40,7 @@ Notes for Pi image setup:
 -needs permissions for cgi-bin scripts
 -default user needs permission to own services in dbus SystemBus
 -apache user needs permission to run methods over SystemBus
+
+## Stuff That's Done:
+
+- [Done] update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
