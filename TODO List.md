@@ -2,17 +2,16 @@
 
 ## Web interface tasks [Mike + Matt]:
 
-- [Matt] Replace the "Profile #" slider with a dropdown list
 
-- [Matt] : add a toggle on the web interface for "IP Axis Cam" or "USB Cam" ... or just hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
+- Replace the "Profile #" slider with a dropdown list
 
-- [Mike] When changing the Pi's IP address, apache will need sudo power (or at least sudoers priviledge on `ifconfig` and `reboot`)
+- When changing the Pi's IP address, apache will need sudo power (or at least sudoers priviledge on `ifconfig` and `reboot`)
 
-- [Matt] On the web page, have a button "Settings" which takes you to a page with "Team Number", and IP addresses for "RPi IP", "AxisCam IP", and "RoboRio IP" (all defaulting to 10.TE.AM.___ but completely editable)
+- On the web page, have a button "Settings" which takes you to a page with "Team Number", and IP addresses for "RPi IP", "AxisCam IP", and "RoboRio IP" (all defaulting to 10.TE.AM.___ but completely editable)
 
-- [Matt] Have a "Downscale" dropdown menu on the web interface?
+- Have a "Downscale" dropdown menu on the web interface?
 
-- [Matt] fps on the interface
+- add fps on the interface
 
 
 
@@ -20,13 +19,16 @@
 ## C++ code tasks [Mike / Kevin, Matt / Morgan]:
 
 
-- [Mike + Matt / Morgan] : clean up code (open-source quality commenting, etc) and remove old or unused files.
-
-- [Mike + Matt / Morgan, high priority] update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
-
-- [Mike, low priority] : Update all the opencv data structures and function calls to the c++ api. (currently it's a mashup of the c and c++ api's)
+- clean up code (open-source quality commenting, etc) and remove old or unused files.
 
 - [Morgan] Optimize frame-rate by reducing image resolution?
+      This may have to wait until we have it running on a Raspberry Pi since it'll run too fast on a laptop for you to see any difference
+
+- [Morgan] hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
+
+- Add (smoothed) fps to the particleReport
+
+- change the ramdisk params and particleReport files names from #define constants to being read from the params file
 
 
 ## With cRIO (to let more teams use it):
@@ -39,5 +41,6 @@ Notes for Pi image setup:
 -default user needs permission to own services in dbus SystemBus
 -apache user needs permission to run methods over SystemBus
 
+## Stuff That's Done:
 
-## Stuff that's Done! :
+- [Done] update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
