@@ -11,7 +11,7 @@ YAMLLibs = `pkg-config --libs yaml-cpp`
 OTHERLibs = -lpthread -lzmq
 
 # 4. name of the output executable
-OUTPUT_EXE = networkTracker
+OUTPUT_EXE = trackerbox2
 
 # 5. rules
 
