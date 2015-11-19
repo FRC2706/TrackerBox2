@@ -9,10 +9,16 @@ This project is being worked on by Mike Ounsworth and Alex Huctwith on FRC team 
 ## Dependencies
 
 Linux packages that need to be installed:
-  - libyaml-cpp0.3-dev
+  - libyaml-cpp-dev
   - libboost-dev
   - libopencv-dev
 
+To compile, do the following from a terminal on the Raspberry Pi:
+
+    cd TrackerBox2/network\ tracker
+    make
+
+The makefile that's there should take care of all the heavy-lifting.
 
 ~~ This will need a longer description on how to compile the code, a brief guide to using it (ie calibration etc) and a link to the paper, once published ~~
 
