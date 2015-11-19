@@ -22,6 +22,9 @@ The makefile that's there should take care of all the heavy-lifting.
 
 ~~ This will need a longer description on how to compile the code, a brief guide to using it (ie calibration etc) and a link to the paper, once published ~~
 
+Run it with
+
+    ./trackerbox2
 
 # GPLv3 license stuff
 
