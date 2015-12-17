@@ -1,54 +1,54 @@
-Profile9:
-  smootherSize: 2
-  maxH: 141
-  minH: 255
-  noiseFilterSize: 25
+AxisCamAddress: http://10.2.96.11/mjpg/video.mjpg
+cRIO_IP: 10.2.96.2
+ActiveProfileIdx: 5
+cRIO_port: 1180
 Profile0:
   minH: 100
+  noiseFilterSize: 0
   maxH: 105
-  noiseFilterSize: 0
   smootherSize: 2
-cRIO_IP: 10.2.96.2
 Profile1:
-  smootherSize: 2
-  noiseFilterSize: 0
   minH: 99
   maxH: 59
-Profile2:
-  noiseFilterSize: 14
-  smootherSize: 9
-  maxH: 29
-  minH: 15
-Profile4:
   noiseFilterSize: 0
-  minH: 0
-  maxH: 255
-  smootherSize: 8
+  smootherSize: 2
+Profile2:
+  minH: 15
+  noiseFilterSize: 14
+  maxH: 29
+  smootherSize: 9
 Profile3:
   minH: 0
+  maxH: 255
   noiseFilterSize: 25
   smootherSize: 2
+Profile4:
+  minH: 0
   maxH: 255
-cRIO_port: 1180
-Profile5:
-  minH: 65
-  maxH: 36
-  smootherSize: 2
   noiseFilterSize: 0
+  smootherSize: 8
+Profile5:
+  minH: 166
+  maxH: 218
+  noiseFilterSize: 18
+  smootherSize: 2
 Profile6:
   minH: 67
   maxH: 134
   noiseFilterSize: 0
   smootherSize: 3
 Profile7:
+  minH: 110
   maxH: 155
   noiseFilterSize: 5
   smootherSize: 2
-  minH: 110
 Profile8:
+  minH: 110
   maxH: 140
   noiseFilterSize: 5
   smootherSize: 2
-  minH: 110
-AxisCamAddress: http://10.2.96.11/mjpg/video.mjpg
-ActiveProfileIdx: 5
+Profile9:
+  minH: 255
+  maxH: 141
+  noiseFilterSize: 25
+  smootherSize: 2

@@ -30,6 +30,7 @@
 
 - change the ramdisk params and particleReport files names from #define constants to being read from the params file
 
+- Rename `ParticleReport` to `COMreport` everywhere that it's used cause "particle" doesn't really make sense.
 
 ## With cRIO (to let more teams use it):
 - test and update Java wrapper
