@@ -23,3 +23,9 @@ To remove the executable, run
 To run the tool you need to provide it an image file to process. I have provided several sample images at different resolutions for you to run it on.
 
     ./benchmarkOpenCV 640x480.jpg
+
+### Viewing the processed image
+
+Just for fun, if you want to see the output of the edge detection, open the file `benchmarkOpenCV.cpp` and change the 0 to a 1 in the line
+
+    13 #define SHOW_GUI 0
