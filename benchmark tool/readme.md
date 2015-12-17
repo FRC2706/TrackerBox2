@@ -29,3 +29,5 @@ To run the tool you need to provide it an image file to process. I have provided
 Just for fun, if you want to see the output of the edge detection, open the file `benchmarkOpenCV.cpp` and change the 0 to a 1 in the line
 
     13 #define SHOW_GUI 0
+
+then re-build it by typing `make`.
