@@ -10,7 +10,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <iostream>
 
-#define SHOW_GUI 1
+#define SHOW_GUI 0
 
 
 using namespace cv;
