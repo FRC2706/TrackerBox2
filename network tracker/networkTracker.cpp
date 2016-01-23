@@ -282,7 +282,7 @@ if ( childpid == 0 ) {
 //		if (minH < maxH)
 		mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 
-		thresholdHSV(frame, mask, 0, 16, 0, 112, 156, 218);
+		thresholdHSV(frame, mask, 0, 40, 96, 195, 144, 216);
 
 //		thresholdHSV(frame, mask, minH, maxH, 0, 159, 128, 255);
 //		else {
@@ -310,17 +310,16 @@ if ( childpid == 0 ) {
 
 
 		// compute the center of mass of the target we found
-		//computeParticleReport(mask);
+		computeParticleReport(mask);
 
 		// Now maybe draw a dot and arrow for the COM and vel
-//		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
-//		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
-//		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
+		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
+		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
+		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
 		#if SHOW_GUI
 			cvShowImage("Raw Image", frame);
 //			cvShowImage("Binary Mask", maskPlusCOM);
 			cvShowImage("Binary Mask", mask);
-
 		#endif
 
 		// save both the raw image and maskPlusCOM to /tmp so that the web interface can show them
