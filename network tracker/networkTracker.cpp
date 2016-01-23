@@ -261,7 +261,6 @@ if ( childpid == 0 ) {
 
 		// Do some processing on the image
 
-//		mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 
 		pthread_mutex_lock( &paramsMutex );
 		int minH = activeProfile.minH;
@@ -274,13 +273,18 @@ if ( childpid == 0 ) {
 		// actual opencv code
 
 
+		
 
 
 
 
 		// Threshold the image (if min > max then take the outside region)
 //		if (minH < maxH)
-//			thresholdHSV(frame, mask, minH, maxH, 40, 255, 40, 255);
+		mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+
+		thresholdHSV(frame, mask, 0, 16, 0, 112, 156, 218);
+
+//		thresholdHSV(frame, mask, minH, maxH, 0, 159, 128, 255);
 //		else {
 //			mask1 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 //			mask2 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
@@ -303,6 +307,8 @@ if ( childpid == 0 ) {
 
 
 
+
+
 		// compute the center of mass of the target we found
 		//computeParticleReport(mask);
 
@@ -313,6 +319,8 @@ if ( childpid == 0 ) {
 		#if SHOW_GUI
 			cvShowImage("Raw Image", frame);
 //			cvShowImage("Binary Mask", maskPlusCOM);
+			cvShowImage("Binary Mask", mask);
+
 		#endif
 
 		// save both the raw image and maskPlusCOM to /tmp so that the web interface can show them
