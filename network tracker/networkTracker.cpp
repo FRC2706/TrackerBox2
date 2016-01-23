@@ -35,7 +35,7 @@
 #include <zmq.hpp>
 
 #define SHOW_GUI 1
-#define PRINT_FPS 1
+#define PRINT_FPS 0
 
 using namespace cv;
 using namespace std;
@@ -156,7 +156,7 @@ int main( int argc, char** argv )
 		cvWaitKey(5);
 	#endif
 
-    // copy the parameters.yaml file from the local dir to ramdisk at /dev/shm
+   // copy the parameters.yaml file from the local dir to ramdisk at /dev/shm
 	std::ifstream  src("TrackerBox2_parameters.yaml", std::ios::binary);
 	std::ofstream  dst("/dev/shm/TrackerBox2_parameters.yaml",   std::ios::binary);
 	dst << src.rdbuf();
@@ -181,33 +181,71 @@ int main( int argc, char** argv )
 	//  - AxisCam
 	//  - Laptop cam
 
-	//~ printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
-	//~ cout.flush();
-	//~ capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str()); // use the ethernet Axis Cam
+	 printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
+	 cout.flush();
+//	 capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str()); // use the ethernet Axis Cam
+//	if(!capture.open(p.ipParams.axisCamAddr.c_str())) {
+//		printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
+//		return -1;
+//    }
+
 
 //	capture = cvCaptureFromFile("vid.avi"); // use a video file instead of a camera
 
+	// testing exec
+//	const char *execArg[3] = {"Command-line", ".", NULL};
+//	execlp("touch testfile", execArg);
 
-	printf("Opening USB / internal webcam...");
-	cout.flush();
-	capture = cvCaptureFromCAM(0); // usb / internal webcam
+
+//	execvp("ls", argv);
+//	char* execParams[4] = {"http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL};
+//	execvp("/usr/bin/wget", execParams);
+	
+int pid = fork();
+if ( pid == 0 ) {
+	execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+}
+//	capture = cvCaptureFromFile("/dev/shm/camera.jpg"); // use a jpg file instead of a camera
+
+	//printf("Opening USB / internal webcam...");
+	//cout.flush();
+	//capture = cvCaptureFromCAM(0); // usb / internal webcam
 
 	printf("Done!\n\n\n");
 
-	frame = cvQueryFrame( capture );
+
+	//capture = cvCaptureFromFile("/dev/shm/camera.jpg"); // use a video file instead of a camera
+
+	//frame = cvQueryFrame( capture );
+
+	if(frame == NULL) {
+		printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
+	}
 
 	IplImage* mask;
 	IplImage* mask1;
 	IplImage* mask2;
 
 	#if PRINT_FPS
-	timeval start, ends;
-	gettimeofday(&start, 0);
+		timeval start, ends;
+		gettimeofday(&start, 0);
 	#endif
 
 	// Main frame loop
 	while(1) {
-		frame = cvQueryFrame( capture );
+		
+//int pid = fork();
+//if ( pid == 0 ) {
+//		execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+//}
+
+//		frame = cvQueryFrame( capture );
+		frame = cvLoadImage( "/dev/shm/camera.jpg" );
+
+		if(frame == NULL) {
+			printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
+			continue;
+		}
 
 		loadParams();
 		updateTrackbars();
@@ -220,47 +258,65 @@ int main( int argc, char** argv )
 
 		// Do some processing on the image
 
-		mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+//		mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 
 		pthread_mutex_lock( &paramsMutex );
 		int minH = activeProfile.minH;
 		int maxH = activeProfile.maxH;
 		pthread_mutex_unlock( &paramsMutex );
 
+
+
+
+		// actual opencv code
+
+
+
+
+
+
 		// Threshold the image (if min > max then take the outside region)
-		if (minH < maxH)
-			thresholdHSV(frame, mask, minH, maxH, 40, 255, 40, 255);
-		else {
-			mask1 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
-			mask2 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+//		if (minH < maxH)
+//			thresholdHSV(frame, mask, minH, maxH, 40, 255, 40, 255);
+//		else {
+//			mask1 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+//			mask2 = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+//
+//			thresholdHSV(frame, mask1, 0, maxH, 40, 255, 40, 255);
+//			thresholdHSV(frame, mask2, minH, 255, 40, 255, 40, 255);
+//
+//			cvOr(mask1, mask2, mask);
+//			cvReleaseImage(&mask1);
+//			cvReleaseImage(&mask2);
+//		}
+//
+//		cvSmooth(mask, mask, CV_MEDIAN, 2*activeProfile.noiseFilterSize+1);
 
-			thresholdHSV(frame, mask1, 0, maxH, 40, 255, 40, 255);
-			thresholdHSV(frame, mask2, minH, 255, 40, 255, 40, 255);
 
-			cvOr(mask1, mask2, mask);
-			cvReleaseImage(&mask1);
-			cvReleaseImage(&mask2);
-		}
 
-		cvSmooth(mask, mask, CV_MEDIAN, 2*activeProfile.noiseFilterSize+1);
+
+
+
+
+
 
 		// compute the center of mass of the target we found
-		computeParticleReport(mask);
+		//computeParticleReport(mask);
 
 		// Now maybe draw a dot and arrow for the COM and vel
-		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
-		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
-		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
+//		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
+//		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
+//		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
 		#if SHOW_GUI
 			cvShowImage("Raw Image", frame);
-			cvShowImage("Binary Mask", maskPlusCOM);
+//			cvShowImage("Binary Mask", maskPlusCOM);
 		#endif
 
 		// save both the raw image and maskPlusCOM to /tmp so that the web interface can show them
-		cvSaveImage("/dev/shm/TrackerBox2_rawImage.jpg", frame);
-		cvSaveImage("/dev/shm/TrackerBox2_maskPlusCOM.jpg", maskPlusCOM);
-		cvReleaseImage(&maskPlusCOM);
-		cvReleaseImage(&mask);
+//		cvSaveImage("/dev/shm/TrackerBox2_rawImage.jpg", frame);
+//		cvSaveImage("/dev/shm/TrackerBox2_maskPlusCOM.jpg", maskPlusCOM);
+//		cvReleaseImage(&maskPlusCOM);
+//		cvReleaseImage(&mask);
 		cvWaitKey(5);
 	} // video frame loop
 
