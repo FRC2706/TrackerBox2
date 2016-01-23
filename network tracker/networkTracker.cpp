@@ -30,12 +30,13 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <pthread.h>	// light multi-threading library
 #include "yaml-cpp/yaml.h"
 #include <zmq.hpp>
 
 #define SHOW_GUI 1
-#define PRINT_FPS 0
+#define PRINT_FPS 1
 
 using namespace cv;
 using namespace std;
@@ -218,9 +219,9 @@ if ( pid == 0 ) {
 
 	//frame = cvQueryFrame( capture );
 
-	if(frame == NULL) {
-		printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
-	}
+//	if(frame == NULL) {
+//		printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
+//	}
 
 	IplImage* mask;
 	IplImage* mask1;
@@ -234,18 +235,20 @@ if ( pid == 0 ) {
 	// Main frame loop
 	while(1) {
 		
-//int pid = fork();
-//if ( pid == 0 ) {
-//		execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
-//}
 
-//		frame = cvQueryFrame( capture );
 		frame = cvLoadImage( "/dev/shm/camera.jpg" );
 
 		if(frame == NULL) {
 			printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
 			continue;
 		}
+
+int childpid = fork();
+if ( childpid == 0 ) {
+		execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+}
+
+//		frame = cvQueryFrame( capture );
 
 		loadParams();
 		updateTrackbars();
@@ -317,7 +320,13 @@ if ( pid == 0 ) {
 //		cvSaveImage("/dev/shm/TrackerBox2_maskPlusCOM.jpg", maskPlusCOM);
 //		cvReleaseImage(&maskPlusCOM);
 //		cvReleaseImage(&mask);
+
+// else {
+	int returnStatus;   
+	waitpid(childpid, &returnStatus, 0);  // Parent process waits here for child to terminate.	
+//}
 		cvWaitKey(5);
+	
 	} // video frame loop
 
 }
