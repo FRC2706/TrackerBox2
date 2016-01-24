@@ -7,13 +7,15 @@ CXXFLAGS = -Wall -O2 `pkg-config --cflags opencv`
 # 3. libraries to link against
 OpenCVLibs = `pkg-config --libs opencv`
 # 4. name of the output executable
-OUTPUT_EXE = openCVcontours
 
 # 5. rules
 
-all: $(OUTPUT_EXE)
+all: openCVcontours findHeights
 
-$(OUTPUT_EXE): OpenCVcontours.c
+openCVcontours: OpenCVcontours.c
+	$(Cxx) $(CXXFLAGS) $(filter-out %.h, $^) -o $@ $(OpenCVLibs)
+
+findHeights: FindHeights.c
 	$(Cxx) $(CXXFLAGS) $(filter-out %.h, $^) -o $@ $(OpenCVLibs)
 
 clean:
