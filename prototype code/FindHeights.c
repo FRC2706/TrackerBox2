@@ -16,14 +16,12 @@
 #include "opencv2/opencv.hpp"
 #include "highgui.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 //Useful values
 #define MAX_CONTOUR_LEVELS 10 //This will be used when displaying contours
 
 #define DEFAULT_TRACKBAR_VAL 128 //For the trackbars
-
-#define IMG_WIDTH 690  //Image width
-#define IMG_HEIGHT 230 //Image height
 
 //Function declarations
 CvContour* contourFromPosition(CvContour *contours, int x, int y); //Returns a pointer to the inner-most contour surrounding the given point
@@ -38,31 +36,26 @@ int main (int argc, const char * argv[]) {
 
 	int thresh1=DEFAULT_TRACKBAR_VAL, thresh2=DEFAULT_TRACKBAR_VAL; //These two variables will hold trackbar positions.
 	
-	//These are pointers to IPL images, which will hold the result of our calculations
-	IplImage *small_image = cvCreateImage(cvSize(IMG_WIDTH,IMG_HEIGHT),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
-	IplImage *small_grey_image = cvCreateImage(cvGetSize(small_image), IPL_DEPTH_8U, 1); //1 channel for greyscale
-	IplImage *edge_image = cvCreateImage(cvGetSize(small_image), IPL_DEPTH_8U, 1); //We use cvGetSize to make sure the images are the same size. 
-	
-	//CvMemStorage and CvSeq are structures used for dynamic data collection. CvMemStorage contains pointers to the actual
-	//allocated memory, but CvSeq is used to access this data. Here, it will hold the list of image contours.
-	CvMemStorage *storage = cvCreateMemStorage(0);
-	
 	cvNamedWindow("Tutorial", 0); //Here we create a window and give it a name. The second argument tells the window to not automatically adjust its size.
 	
-	//We add two trackbars (sliders) to the window. These will be used to set the parameters for the Canny edge detection.
-	cvCreateTrackbar("Thresh1", "Tutorial", &thresh1, 256, 0);
-	cvCreateTrackbar("Thresh2", "Tutorial", &thresh2, 256, 0);
-	
-	//Set the trackbar position to the default value. 
-	cvSetTrackbarPos("Thresh1", "Tutorial", DEFAULT_TRACKBAR_VAL); //Trackbar name, window name, position
-	cvSetTrackbarPos("Thresh2", "Tutorial", DEFAULT_TRACKBAR_VAL);
-
 	IplImage *frame; //This will point to the IPL image we will retrieve from the camera.
 	
 	//Grab a frame from the file provided on the command-line.
 	frame = cvLoadImage( argv[1] );
 	
 	if(!frame) exit(0); //Couldn't get an image, try again next time.
+	
+	int img_width = frame->width;  //Image width
+	int img_height = frame->height; //Image height
+
+	//These are pointers to IPL images, which will hold the result of our calculations
+	IplImage *small_image = cvCreateImage(cvSize(img_width,img_height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
+	IplImage *small_grey_image = cvCreateImage(cvGetSize(small_image), IPL_DEPTH_8U, 1); //1 channel for greyscale
+	IplImage *edge_image = cvCreateImage(cvGetSize(small_image), IPL_DEPTH_8U, 1); //We use cvGetSize to make sure the images are the same size. 
+	
+	//CvMemStorage and CvSeq are structures used for dynamic data collection. CvMemStorage contains pointers to the actual
+	//allocated memory, but CvSeq is used to access this data. Here, it will hold the list of image contours.
+	CvMemStorage *storage = cvCreateMemStorage(0);
 	
 	//In computer vision, it's always better to work with the smallest images possible, for faster performance.
 	//cvResize will use inter-linear interpolation to fit frame into small_image.
@@ -112,6 +105,8 @@ int main (int argc, const char * argv[]) {
 	// I'm cheating and using squared distance because I only need find the smallest so I can avoid doing the slow square-root.
 	long distTopLeft, distBotLeft, distTopRight, distBotRight;
 
+	// initialize random seed:
+	srand ( time(NULL) );
 	for (unsigned int i = 0; i < contours.size(); ++i) {
 		cv::Scalar colour = cv::Scalar( rand()%255, rand()%255, rand()%255 );
 		cv::drawContours(mat_small_image, contours, i, colour, 2);	// draw the contour in a random colour
@@ -124,34 +119,51 @@ int main (int argc, const char * argv[]) {
 		if(contourArea(contours[i]) < 100)
 			continue;
 
+		
+		// Find the bounding box for this target
+		cv::Rect bb;	// the bounding box
+		std::vector<cv::Point> contour_poly( contours[i].size() );
+		cv::approxPolyDP( cv::Mat( contours[i] ), contour_poly, 3, true );
+		bb = boundingRect( cv::Mat(contour_poly) );
+		
+		// convienience vars to save typing
+		int bblx = bb.x;					// x coordinate of the left side of the bounding box
+		int bbrx = bb.x + bb.width;	// x coordinate of the right side of the bounding box
+		int bbty = bb.y;					// y coordinate of the top of the bounding box
+		int bbby = bb.y + bb.height;	// y coordinate of the bottem of the bounding box
+
 		topLeft[i] = botLeft[i] = topRight[i] = botRight[i] = contours[i][0];  // Assumes the contour has at least 1 point
 
 		// these should be relative to the target's basic bounding box
-		distTopLeft = topLeft[i].x * topLeft[i].x + topLeft[i].y * topLeft[i].y;
-		distBotLeft = botLeft[i].x * botLeft[i].x + (IMG_HEIGHT-botLeft[i].y) * (IMG_HEIGHT-botLeft[i].y);
-		distTopRight = (IMG_WIDTH-topRight[i].x) * (IMG_WIDTH-topRight[i].x) + topRight[i].y * topRight[i].y;
-		distBotRight = (IMG_WIDTH-botRight[i].x) * (IMG_WIDTH-botRight[i].x) + (IMG_HEIGHT-botRight[i].y) * (IMG_HEIGHT-botRight[i].y);
+		distTopLeft = (bblx-topLeft[i].x) * (bblx-topLeft[i].x) + (bbty-topLeft[i].y) * (bbty-topLeft[i].y);
+		distBotLeft = (bblx-botLeft[i].x) * (bblx-botLeft[i].x) + (bbby-botLeft[i].y) * (bbby-botLeft[i].y);
+		distTopRight = (bbrx-topRight[i].x) * (bbrx-topRight[i].x) + (bbty-topRight[i].y) * (bbty-topRight[i].y);
+		distBotRight = (bbrx-botRight[i].x) * (bbrx-botRight[i].x) + (bbty-botRight[i].y) * (bbty-botRight[i].y);
 		int dist;
 		for(unsigned int j = 1; j < contours[i].size(); ++j){
-			dist = contours[i][j].x * contours[i][j].x + contours[i][j].y * contours[i][j].y;
+//			dist = contours[i][j].x * contours[i][j].x + contours[i][j].y * contours[i][j].y;
+			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
 	      if (dist < distTopLeft){
 	         topLeft[i].x = contours[i][j].x;
 				topLeft[i].y = contours[i][j].y;
 				distTopLeft = dist;
 	      }
-			dist = contours[i][j].x * contours[i][j].x + (IMG_HEIGHT-contours[i][j].y) * (IMG_HEIGHT-contours[i][j].y);
+//			dist = contours[i][j].x * contours[i][j].x + (IMG_HEIGHT-contours[i][j].y) * (IMG_HEIGHT-contours[i][j].y);
+			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
 			if (dist < distBotLeft){
 	         botLeft[i].x = contours[i][j].x;
 				botLeft[i].y = contours[i][j].y;
 				distBotLeft = dist;
 	      }
-			dist = (IMG_WIDTH-contours[i][j].x) * (IMG_WIDTH-contours[i][j].x) + contours[i][j].y * contours[i][j].y;
+//			dist = (IMG_WIDTH-contours[i][j].x) * (IMG_WIDTH-contours[i][j].x) + contours[i][j].y * contours[i][j].y;
+			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
 			if (dist < distTopRight){
 	         topRight[i].x = contours[i][j].x;
 				topRight[i].y = contours[i][j].y;
 				distTopRight = dist;
 	      }
-			dist = (IMG_WIDTH-contours[i][j].x) * (IMG_WIDTH-contours[i][j].x) + (IMG_HEIGHT-contours[i][j].y) * (IMG_HEIGHT-contours[i][j].y);
+//			dist = (IMG_WIDTH-contours[i][j].x) * (IMG_WIDTH-contours[i][j].x) + (IMG_HEIGHT-contours[i][j].y) * (IMG_HEIGHT-contours[i][j].y);
+			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
 			if (dist < distBotRight){
 	         botRight[i].x = contours[i][j].x;
 				botRight[i].y = contours[i][j].y;
