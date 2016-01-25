@@ -20,7 +20,9 @@
 /** I am aware that this code is an abhorant mix of c and c++ opencv calls and data structures. **/
 
 #include "networkTracker.h"
+
 #include "networkTrackerYAML_utils.h"
+#include "vision_utils.h"
 
 #include <highgui.h>
 #include <fstream>
@@ -37,6 +39,7 @@
 
 #define SHOW_GUI 1
 #define PRINT_FPS 1
+#define RUN_WGET 0
 
 using namespace cv;
 using namespace std;
@@ -58,13 +61,13 @@ void writeParams(int x) {
 
 void updateTrackbars() {
 	#if SHOW_GUI
-	cvSetTrackbarPos("minH", "Binary Mask", activeProfile.minH);
-	cvSetTrackbarPos("maxH", "Binary Mask", activeProfile.maxH);
-	cvSetTrackbarPos("size of noise filter pass", "Binary Mask", activeProfile.noiseFilterSize);
-	//cvSetTrackbarPos("size of smoother pass", "Binary Mask", activeProfile.smootherSize);
-	cvSetTrackbarPos("Profile #", "Binary Mask", p.activeProfileIdx);
+		cvSetTrackbarPos("minH", "Result", activeProfile.minH);
+		cvSetTrackbarPos("maxH", "Result", activeProfile.maxH);
+		cvSetTrackbarPos("size of noise filter pass", "Result", activeProfile.noiseFilterSize);
+		//cvSetTrackbarPos("size of smoother pass", "Binary Mask", activeProfile.smootherSize);
+		cvSetTrackbarPos("Profile #", "Result", p.activeProfileIdx);
 	#else
-	return;
+		return;
 	#endif
 }
 
@@ -122,11 +125,11 @@ int main( int argc, char** argv )
 
 	// now the OpenCV stuff
 	#if SHOW_GUI
-		cvNamedWindow("Binary Mask", CV_WINDOW_AUTOSIZE);
-		cvCreateTrackbar( "minH", "Binary Mask", &activeProfile.minH, 255, writeParams);
-		cvCreateTrackbar( "maxH", "Binary Mask", &activeProfile.maxH, 255, writeParams);
-		cvCreateTrackbar( "size of noise filter pass", "Binary Mask", &activeProfile.noiseFilterSize, 25, writeParams);
-		cvCreateTrackbar( "Profile #", "Binary Mask", &activeProfileSlider, 9, changeProfile);
+		cvNamedWindow("Result", CV_WINDOW_AUTOSIZE);
+		cvCreateTrackbar( "minH", "Result", &activeProfile.minH, 255, writeParams);
+		cvCreateTrackbar( "maxH", "Result", &activeProfile.maxH, 255, writeParams);
+		cvCreateTrackbar( "size of noise filter pass", "Result", &activeProfile.noiseFilterSize, 25, writeParams);
+		cvCreateTrackbar( "Profile #", "Result", &activeProfileSlider, 9, changeProfile);
 		cvWaitKey(5);
 	#endif
 
@@ -143,18 +146,23 @@ int main( int argc, char** argv )
 
 	IplImage* frame;
 
-	// http://i.imgur.com/5aEOlcW.jpg
-	 printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
-	 cout.flush();
-
 	 // Note: for examples of how to connect openCV directly to a camera, see older versions of this file on github
 
 	 // spawn a side process to do a web-get to fetch the latest frame of the jpg.
-	 int pid = fork();
-	 if ( pid == 0 ) {
-		 execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
-	 }
-	 printf("Done!\n\n\n");
+	#if RUN_WGET
+		int pid = fork();
+		if ( pid == 0 ) {	// in the child process
+			// http://i.imgur.com/5aEOlcW.jpg
+			printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
+			cout.flush();
+			execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+
+			printf("Done!\n\n\n");
+		}
+	#else
+		printf("wget disabled by #define RUN_WGET 0 in networkTracker.cpp\n");
+	#endif
+
 
 	IplImage* mask;
 
@@ -175,11 +183,13 @@ int main( int argc, char** argv )
 			continue;
 		}
 
-		// spawn a side process to do a web-get to fetch the latest frame of the jpg.
-		int childpid = fork();
-		if ( childpid == 0 ) {
-				execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
-		}
+		#if RUN_WGET
+			// spawn a side process to do a web-get to fetch the latest frame of the jpg.
+			int childpid = fork();
+			if ( childpid == 0 ) {
+					execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+			}
+		#endif
 
 		loadParams();
 		updateTrackbars();
@@ -191,6 +201,8 @@ int main( int argc, char** argv )
 		#endif
 
 		// Do some processing on the image
+
+
 
 
 
@@ -231,13 +243,12 @@ int main( int argc, char** argv )
 
 
 
-
-
-
+		IplImage* outputImage = cvCreateImage(cvSize(frame->width,frame->height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
+		findFRCVisionTargets(frame, outputImage);
 
 
 		// compute the center of mass of the target we found
-		computeParticleReport(mask);
+//		computeParticleReport(mask);
 
 		// Now maybe draw a dot and arrow for the COM and vel
 //		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
@@ -246,16 +257,19 @@ int main( int argc, char** argv )
 		#if SHOW_GUI
 			cvShowImage("Raw Image", frame);
 //			cvShowImage("Binary Mask", maskPlusCOM);
-			cvShowImage("Binary Mask", mask);
-
+			cvShowImage("Result", outputImage);
 			cvWaitKey(5);	// give a pause for the openCV GUI to draw
 		#endif
 
 //		cvReleaseImage(&maskPlusCOM);
+		cvReleaseImage(&frame);
 		cvReleaseImage(&mask);
+		cvReleaseImage(&outputImage);
 
-		int returnStatus;
-		waitpid(childpid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+		#if RUN_WGET
+			int returnStatus;
+			waitpid(childpid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+		#endif
 	} // end video frame loop
 } // end main()
 
