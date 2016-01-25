@@ -49,7 +49,6 @@ pthread_mutex_t paramsMutex = PTHREAD_MUTEX_INITIALIZER;
 ParticleReport mostRecentPR;
 pthread_mutex_t mostRecentPRMutex = PTHREAD_MUTEX_INITIALIZER;
 
-
 void writeParams(int x) {
 	pthread_mutex_lock( &paramsMutex );
 	p.profiles[p.activeProfileIdx] = activeProfile;
@@ -101,32 +100,6 @@ void loadParams() {
 //	updateTrackbars();
 }
 
-void *check_zmqstuff(void *thing)
-{
-	while (1){
-		zmq::context_t context (1);
-	    zmq::socket_t socket (context, ZMQ_REP);
-	    socket.bind ("tcp://*:5555");
-	    zmq::message_t request;
-	    socket.recv (&request);
-	    //std::cout << "Received request: [" << (char*) request.data() << "]" << std::endl;
-	    std::string input = (char*) request.data();
-		std::vector<int> output;
-		for(std::string::size_type p0=0,p1=input.find(',');
-        		p1!=std::string::npos || p0!=std::string::npos;
-        		(p0=(p1==std::string::npos)?p1:++p1),p1=input.find(',',p0) )
-    		output.push_back( strtol(input.c_str()+p0,NULL,0) );
-
-    	pthread_mutex_lock( &paramsMutex );
-		p.activeProfileIdx = output[0];
-		p.profiles[p.activeProfileIdx].minH = output[1];
-		p.profiles[p.activeProfileIdx].maxH = output[2];
-		p.profiles[p.activeProfileIdx].noiseFilterSize = output[3];
-		writeParametersToFile(p);
-		pthread_mutex_unlock( &paramsMutex );
-	}
-	return NULL;
-}
 
 CvPoint COM_center;
 
@@ -169,63 +142,21 @@ int main( int argc, char** argv )
 	pthread_mutex_unlock( &paramsMutex );
 
 	IplImage* frame;
-	CvCapture* capture;
 
 	// http://i.imgur.com/5aEOlcW.jpg
-	pthread_t thread1;
-	pthread_create (&thread1, NULL, check_zmqstuff, NULL);
-
-
-	// TODO: Select which camera in the GUI. This will need some non-trivial changes to allow it on the fly.
-	// or just take in order of preference:
-	//  - USB cam
-	//  - AxisCam
-	//  - Laptop cam
-
 	 printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
 	 cout.flush();
-//	 capture = cvCaptureFromFile(p.ipParams.axisCamAddr.c_str()); // use the ethernet Axis Cam
-//	if(!capture.open(p.ipParams.axisCamAddr.c_str())) {
-//		printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
-//		return -1;
-//    }
 
+	 // Note: for examples of how to connect openCV directly to a camera, see older versions of this file on github
 
-//	capture = cvCaptureFromFile("vid.avi"); // use a video file instead of a camera
-
-	// testing exec
-//	const char *execArg[3] = {"Command-line", ".", NULL};
-//	execlp("touch testfile", execArg);
-
-
-//	execvp("ls", argv);
-//	char* execParams[4] = {"http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL};
-//	execvp("/usr/bin/wget", execParams);
-	
-int pid = fork();
-if ( pid == 0 ) {
-	execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
-}
-//	capture = cvCaptureFromFile("/dev/shm/camera.jpg"); // use a jpg file instead of a camera
-
-	//printf("Opening USB / internal webcam...");
-	//cout.flush();
-	//capture = cvCaptureFromCAM(0); // usb / internal webcam
-
-	printf("Done!\n\n\n");
-
-
-	//capture = cvCaptureFromFile("/dev/shm/camera.jpg"); // use a video file instead of a camera
-
-	//frame = cvQueryFrame( capture );
-
-//	if(frame == NULL) {
-//		printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
-//	}
+	 // spawn a side process to do a web-get to fetch the latest frame of the jpg.
+	 int pid = fork();
+	 if ( pid == 0 ) {
+		 execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+	 }
+	 printf("Done!\n\n\n");
 
 	IplImage* mask;
-	IplImage* mask1;
-	IplImage* mask2;
 
 	#if PRINT_FPS
 		timeval start, ends;
@@ -234,21 +165,21 @@ if ( pid == 0 ) {
 
 	// Main frame loop
 	while(1) {
-		
 
+		// load the latest frame from the ramdisk
 		frame = cvLoadImage( "/dev/shm/camera.jpg" );
 
+		// make sure that the load did not fail
 		if(frame == NULL) {
 			printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
 			continue;
 		}
 
-int childpid = fork();
-if ( childpid == 0 ) {
-		execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
-}
-
-//		frame = cvQueryFrame( capture );
+		// spawn a side process to do a web-get to fetch the latest frame of the jpg.
+		int childpid = fork();
+		if ( childpid == 0 ) {
+				execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+		}
 
 		loadParams();
 		updateTrackbars();
@@ -262,23 +193,19 @@ if ( childpid == 0 ) {
 		// Do some processing on the image
 
 
-		pthread_mutex_lock( &paramsMutex );
-		int minH = activeProfile.minH;
-		int maxH = activeProfile.maxH;
-		pthread_mutex_unlock( &paramsMutex );
-
-
 
 
 		// actual opencv code
 
 
-		
+
 
 
 
 
 		// Threshold the image (if min > max then take the outside region)
+//			IplImage* mask1;
+//			IplImage* mask2;
 //		if (minH < maxH)
 		mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 
@@ -313,30 +240,34 @@ if ( childpid == 0 ) {
 		computeParticleReport(mask);
 
 		// Now maybe draw a dot and arrow for the COM and vel
-		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
-		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
-		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
+//		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
+//		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
+//		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
 		#if SHOW_GUI
 			cvShowImage("Raw Image", frame);
 //			cvShowImage("Binary Mask", maskPlusCOM);
 			cvShowImage("Binary Mask", mask);
+
+			cvWaitKey(5);	// give a pause for the openCV GUI to draw
 		#endif
 
-		// save both the raw image and maskPlusCOM to /tmp so that the web interface can show them
-//		cvSaveImage("/dev/shm/TrackerBox2_rawImage.jpg", frame);
-//		cvSaveImage("/dev/shm/TrackerBox2_maskPlusCOM.jpg", maskPlusCOM);
 //		cvReleaseImage(&maskPlusCOM);
-//		cvReleaseImage(&mask);
+		cvReleaseImage(&mask);
 
-// else {
-	int returnStatus;   
-	waitpid(childpid, &returnStatus, 0);  // Parent process waits here for child to terminate.	
-//}
-		cvWaitKey(5);
-	
-	} // video frame loop
+		int returnStatus;
+		waitpid(childpid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+	} // end video frame loop
+} // end main()
 
-}
+
+
+
+
+
+
+
+
+
 
 /**
  * This expects a binary mask. It'do weird things if given a 3-channel image.

@@ -43,8 +43,8 @@ struct ProfileParameters {
 
 struct Parameters {
 	IPParameters ipParams;
-	
-	int activeProfileIdx;	
+
+	int activeProfileIdx;
 	ProfileParameters profiles[10];
 };
 
