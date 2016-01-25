@@ -41,6 +41,7 @@
 #define PRINT_FPS 1
 #define RUN_WGET 0
 
+
 using namespace cv;
 using namespace std;
 
@@ -155,7 +156,7 @@ int main( int argc, char** argv )
 			// http://i.imgur.com/5aEOlcW.jpg
 			printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
 			cout.flush();
-			execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+			execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", "-q", NULL);
 
 			printf("Done!\n\n\n");
 		}
@@ -163,6 +164,7 @@ int main( int argc, char** argv )
 		printf("wget disabled by #define RUN_WGET 0 in networkTracker.cpp\n");
 	#endif
 
+return 0;
 
 	#if PRINT_FPS
 		timeval start, ends;
@@ -185,7 +187,7 @@ int main( int argc, char** argv )
 			// spawn a side process to do a web-get to fetch the latest frame of the jpg.
 			int childpid = fork();
 			if ( childpid == 0 ) {
-					execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+				execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
 			}
 		#endif
 
@@ -220,7 +222,9 @@ int main( int argc, char** argv )
 		IplImage* mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 		//thresholdHSV(frame, mask, 0, 40, 96, 195, 144, 216);
 
-		thresholdHSV(frame, mask, 0, 255, 20, 255, 20, 240);
+		//thresholdHSV(frame, mask, 0, 255, 0, 254, 0, 253);
+		mask = cvCloneImage(frame);
+
 
 //		thresholdHSV(frame, mask, minH, maxH, 0, 159, 128, 255);
 //		else {
@@ -242,8 +246,9 @@ int main( int argc, char** argv )
 
 
 		// todo: change the output image to `mask`
-		IplImage* outputImage = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
-		cvCvtColor(mask, outputImage, CV_GRAY2BGR);
+		//IplImage* outputImage = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
+		//cvCvtColor(mask, outputImage, CV_GRAY2BGR);
+		IplImage* outputImage = cvCloneImage(frame);
 		findFRCVisionTargets(mask, outputImage);
 
 
@@ -270,10 +275,14 @@ int main( int argc, char** argv )
 
 		#if RUN_WGET
 			int returnStatus;
-			waitpid(childpid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+//			waitpid(childpid, &returnStatus, 0);  // Parent process waits here for child to terminate.
+			waitpid(-1, &returnStatus, 0);	// -1 means that the parent process will wait for _all_ child processes to terminate. We're only starting 1 child.
 		#endif
 	} // end video frame loop
 } // end main()
+
+
+
 
 
 

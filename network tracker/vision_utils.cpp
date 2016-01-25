@@ -124,16 +124,22 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 				distBotRight = dist;
 	      }
 		}
+
+
+
+    /******** DRAW STUFF ONTO THE OUTPUT IMAGE ********/
+
+
 		// draw the corner points
-		//cv::circle(mat_outputImage, topLeft[i], 8, colour, -1);
-		//cv::circle(mat_outputImage, botLeft[i], 8, colour, -1);
-		//cv::circle(mat_outputImage, topRight[i], 8, colour, -1);
-		//cv::circle(mat_outputImage, botRight[i], 8, colour, -1);
+		cv::circle(mat_outputImage, topLeft[i], 8, colour, -1);
+		cv::circle(mat_outputImage, botLeft[i], 8, colour, -1);
+		cv::circle(mat_outputImage, topRight[i], 8, colour, -1);
+		cv::circle(mat_outputImage, botRight[i], 8, colour, -1);
 
     // set the x coordinates for the bottom points to match the top points since we don't actually care about the X anyways.
 		botLeft[i].x = topLeft[i].x;
 		botRight[i].x = topRight[i].x;
-		cv::drawContours(mat_outputImage, contours, i, colour, 1);	// draw the outline of the object
+		cv::drawContours(mat_outputImage, contours, i, colour, 2);	// draw the outline of the object
 		cv::line(mat_outputImage, topLeft[i], botLeft[i], colour, 10);
 		cv::line(mat_outputImage, topRight[i], botRight[i], colour, 10);
 
