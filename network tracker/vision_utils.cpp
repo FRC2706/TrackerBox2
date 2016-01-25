@@ -46,9 +46,9 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 
 	cv::findContours(mat_working_image, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
   if (contours.size() > 0)
-	 printf("Found %d targets.\n", (int) contours[0].size());
+	 printf("Found %d targets.  ", (int) contours[0].size());
   else
-    printf("Found 0 targets.\n");
+    printf("Found 0 targets.  ");
 
 	//This function will display contours on top of an image. We can specify different colours depending on whether the contour in a hole or not.
 //	cv::drawContours(mat_outputImage, contours, CV_RGB(255,0,0), CV_RGB(0,255,0), MAX_CONTOUR_LEVELS, 1, CV_AA, cvPoint(0,0));
