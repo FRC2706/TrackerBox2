@@ -7,16 +7,13 @@ void findFRCVisionTargets(IplImage* frame, IplImage* outputImage) {
 
   int thresh1=128, thresh2=128;
 
-	int img_width = frame->width;  //Image width
-	int img_height = frame->height; //Image height
-
 	//These are pointers to IPL images, which will hold the result of our calculations
-//	IplImage *outputImage = cvCreateImage(cvSize(img_width,img_height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
+  //	IplImage *outputImage = cvCreateImage(cvSize(img_width,img_height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
 	IplImage *small_grey_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //1 channel for greyscale
 	IplImage *edge_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //We use cvGetSize to make sure the images are the same size.
 
 	//In computer vision, it's always better to work with the smallest images possible, for faster performance.
-	//cvResize will use inter-linear interpolation to fit frame into outputImage.
+	//cvResize will use inter-linear interpolation to fit frame into outputImage (matching the size of the image they gave us).
 	cvResize(frame, outputImage, CV_INTER_LINEAR);
 
 	// smooth out the image to remove some of the holes, it also blurs the result.
@@ -66,8 +63,8 @@ void findFRCVisionTargets(IplImage* frame, IplImage* outputImage) {
 	// initialize random seed:
 	srand ( time(NULL) );
 	for (unsigned int i = 0; i < contours.size(); ++i) {
-		cv::Scalar colour = cv::Scalar( rand()%255, rand()%255, rand()%255 );
-		cv::drawContours(mat_outputImage, contours, i, colour, 2);	// draw the contour in a random colour
+		//cv::Scalar colour = cv::Scalar( rand()%255, rand()%255, rand()%255 ); // use a random colour to tell each target apart
+    cv::Scalar colour = cv::Scalar( 44, 169, 62 ); // use a random colour to tell each target apart
 
 		// if there are no points in this contour, skip it.
 		if(contours[i].size() <= 0)
@@ -124,10 +121,25 @@ void findFRCVisionTargets(IplImage* frame, IplImage* outputImage) {
 				distBotRight = dist;
 	      }
 		}
-		cv::circle(mat_outputImage, topLeft[i], 8, colour, -1);
-		cv::circle(mat_outputImage, botLeft[i], 8, colour, -1);
-		cv::circle(mat_outputImage, topRight[i], 8, colour, -1);
-		cv::circle(mat_outputImage, botRight[i], 8, colour, -1);
+		// draw the corner points
+		//cv::circle(mat_outputImage, topLeft[i], 8, colour, -1);
+		//cv::circle(mat_outputImage, botLeft[i], 8, colour, -1);
+		//cv::circle(mat_outputImage, topRight[i], 8, colour, -1);
+		//cv::circle(mat_outputImage, botRight[i], 8, colour, -1);
+
+    // set the x coordinates for the bottom points to match the top points since we don't actually care about the X anyways.
+		botLeft[i].x = topLeft[i].x;
+		botRight[i].x = topRight[i].x;
+		cv::drawContours(mat_outputImage, contours, i, colour, 1);	// draw the outline of the object
+		cv::line(mat_outputImage, topLeft[i], botLeft[i], colour, 10);
+		cv::line(mat_outputImage, topRight[i], botRight[i], colour, 10);
+
+		// disaplay the skew as a ratio of the height of the left and right sides.
+		// print the text sorta centred below the bottom of the target.
+		char text[16];
+		sprintf(text, "%.3f", ((float)topLeft[i].y - botLeft[i].y) / (topRight[i].y - botRight[i].y) );
+		cv::Point textLoc( (botLeft[i].x + botRight[i].x)/2, (botLeft[i].y + botRight[i].y)/2 + 30);
+		cv::putText( mat_outputImage, text, textLoc, CV_FONT_HERSHEY_COMPLEX, 0.75, colour);
 	}
 
 
