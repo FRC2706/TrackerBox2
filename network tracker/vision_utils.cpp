@@ -3,49 +3,52 @@
 
 
 // TODO: have this return the values. This will require making some new structs.
-void findFRCVisionTargets(IplImage* frame, IplImage* outputImage) {
+void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 
   int thresh1=128, thresh2=128;
 
 	//These are pointers to IPL images, which will hold the result of our calculations
   //	IplImage *outputImage = cvCreateImage(cvSize(img_width,img_height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
-	IplImage *small_grey_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //1 channel for greyscale
+	IplImage *working_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //1 channel for greyscale
 	IplImage *edge_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //We use cvGetSize to make sure the images are the same size.
 
 	//In computer vision, it's always better to work with the smallest images possible, for faster performance.
-	//cvResize will use inter-linear interpolation to fit frame into outputImage (matching the size of the image they gave us).
-	cvResize(frame, outputImage, CV_INTER_LINEAR);
+	//cvResize will use inter-linear interpolation to fit mask into outputImage (matching the size of the image they gave us).
+//	cvResize(mask, working_image, CV_INTER_LINEAR);
 
 	// smooth out the image to remove some of the holes, it also blurs the result.
-	cvSmooth(outputImage, outputImage, CV_MEDIAN, 2*2+1);
+//	cvSmooth(outputImage, outputImage, CV_MEDIAN, 2*2+1);
 
 	//Many computer vision algorithms do not use colour information. Here, we convert from RGB to greyscale before processing further.
-	cvCvtColor(outputImage, small_grey_image, CV_RGB2GRAY);
+//	cvCvtColor(mask, working_image, CV_RGB2GRAY);
 
 	//We then detect edges in the image using the Canny algorithm. This will return a binary image, one where the pixel values will be 255 for
 	//pixels that are edges and 0 otherwise. This is unlike other edge detection algorithms like Sobel, which compute greyscale levels.
-	cvCanny(small_grey_image, edge_image, (double)thresh1, (double)thresh2, 3); //We use the threshold values from the trackbars and set the window size to 3
+	cvCanny(mask, edge_image, (double)thresh1, (double)thresh2, 3); //We use the threshold values from the trackbars and set the window size to 3
 
 	//The edges returned by the Canny algorithm might have small holes in them, which will cause some problems during contour detection.
 	//The simplest way to solve this problem is to "dilate" the image. This is a morphological operator that will set any pixel in a binary image to 255 (on)
 	//if it has one neighbour that is not 0. The result of this is that edges grow fatter and small holes are filled in.
-	//We re-use small_grey_image to store the results, as we won't need it anymore.
-	cvDilate(edge_image, small_grey_image, 0, 1);
+	//We re-use working_image to store the results, as we won't need it anymore.
+	cvDilate(edge_image, working_image, 0, 1);
 
 	//Once we have a binary image, we can look for contours in it. cvFindContours will scan through the image and store connected contours in "sorage".
 	//"contours" will point to the first contour detected. CV_RETR_TREE means that the function will create a contour hierarchy. Each contour will contain
 	//a pointer to contours that are contained inside it (holes). CV_CHAIN_APPROX_NONE means that all the contours points will be stored. Finally, an offset
 	//value can be specified, but we set it to (0,0).
 //	CvSeq *contours = 0;
-//	cvFindContours(small_grey_image, storage, &contours, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0,0));
-//	cvFindContours(small_grey_image, storage, &contours, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0));
+//	cvFindContours(working_image, storage, &contours, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0,0));
+//	cvFindContours(working_image, storage, &contours, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0));
 
 	std::vector<std::vector<cv::Point> > contours;
-	cv::Mat mat_small_grey_image(small_grey_image);
+	cv::Mat mat_working_image(working_image);
 	cv::Mat mat_outputImage(outputImage);
 
-	cv::findContours(mat_small_grey_image, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-	printf("Found %d targets.\n", (int) contours[0].size());
+	cv::findContours(mat_working_image, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+  if (contours.size() > 0)
+	 printf("Found %d targets.\n", (int) contours[0].size());
+  else
+    printf("Found 0 targets.\n");
 
 	//This function will display contours on top of an image. We can specify different colours depending on whether the contour in a hole or not.
 //	cv::drawContours(mat_outputImage, contours, CV_RGB(255,0,0), CV_RGB(0,255,0), MAX_CONTOUR_LEVELS, 1, CV_AA, cvPoint(0,0));
@@ -142,13 +145,8 @@ void findFRCVisionTargets(IplImage* frame, IplImage* outputImage) {
 		cv::putText( mat_outputImage, text, textLoc, CV_FONT_HERSHEY_COMPLEX, 0.75, colour);
 	}
 
-
-
-
-
-
   // free the memory for all the images
-  cvReleaseImage(&small_grey_image);
+  cvReleaseImage(&working_image);
   cvReleaseImage(&edge_image);
 
 //  outputImage = mat_outputImage;

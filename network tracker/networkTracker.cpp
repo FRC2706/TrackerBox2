@@ -164,8 +164,6 @@ int main( int argc, char** argv )
 	#endif
 
 
-	IplImage* mask;
-
 	#if PRINT_FPS
 		timeval start, ends;
 		gettimeofday(&start, 0);
@@ -219,9 +217,10 @@ int main( int argc, char** argv )
 //			IplImage* mask1;
 //			IplImage* mask2;
 //		if (minH < maxH)
-		mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+		IplImage* mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
+		//thresholdHSV(frame, mask, 0, 40, 96, 195, 144, 216);
 
-		thresholdHSV(frame, mask, 0, 40, 96, 195, 144, 216);
+		thresholdHSV(frame, mask, 0, 255, 20, 255, 20, 240);
 
 //		thresholdHSV(frame, mask, minH, maxH, 0, 159, 128, 255);
 //		else {
@@ -236,19 +235,22 @@ int main( int argc, char** argv )
 //			cvReleaseImage(&mask2);
 //		}
 //
-//		cvSmooth(mask, mask, CV_MEDIAN, 2*activeProfile.noiseFilterSize+1);
+		cvSmooth(mask, mask, CV_MEDIAN, 2*2+1);
 
 
 
 
 
-
-		IplImage* outputImage = cvCreateImage(cvSize(frame->width,frame->height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
-		findFRCVisionTargets(frame, outputImage);
+		// todo: change the output image to `mask`
+		IplImage* outputImage = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
+		cvCvtColor(mask, outputImage, CV_GRAY2BGR);
+		findFRCVisionTargets(mask, outputImage);
 
 
 		// compute the center of mass of the target we found
+		// TODO I need to make a new version of this for this year's game
 //		computeParticleReport(mask);
+
 
 		// Now maybe draw a dot and arrow for the COM and vel
 //		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
@@ -256,7 +258,7 @@ int main( int argc, char** argv )
 //		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
 		#if SHOW_GUI
 			cvShowImage("Raw Image", frame);
-//			cvShowImage("Binary Mask", maskPlusCOM);
+			cvShowImage("Binary Mask", mask);
 			cvShowImage("Result", outputImage);
 			cvWaitKey(5);	// give a pause for the openCV GUI to draw
 		#endif
@@ -350,7 +352,7 @@ void thresholdHSV(IplImage* image, IplImage* mask, unsigned char minH, unsigned 
 
 	cvInRangeS(hsv, cvScalar(minH, minS, minV), cvScalar(maxH, maxS, maxV), mask);
 
-    cvReleaseImage(&hsv);
+  cvReleaseImage(&hsv);
 }
 
 
