@@ -367,6 +367,11 @@ void thresholdHSV(IplImage* image, IplImage* mask, unsigned char minH, unsigned 
 
 /*************** NETWORK SERVER STUFF **********************/
 
+/**
+ * Accept an incomming request from the roboRIO to change which set of pre-set
+ * parameters we're using. This is meant to be used if we want to switch between tracking
+ * - for example - the ball and the vision target during a match.
+ */
 void *runChangeProfileServer(void *placeHolder) {
 	printf("Listening on port %d"
 			" for requests to change vision profile.\n", SOCK_CHANGE_PROFILE_PORT);
@@ -445,7 +450,10 @@ void *runChangeProfileServer(void *placeHolder) {
 
 
 
-
+/**
+ * Accpet an empty message from the roboRIO and return the vision data from the most recent
+ * frame that was processed.
+ */
 void *runDataRequestServer(void *placeHolder) {
 	printf("Listening on port %d"
 			" for requests to transmit data.\n", SOCK_CHANGE_DATA_REQUEST_PORT);
