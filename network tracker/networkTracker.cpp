@@ -237,6 +237,8 @@ int main( int argc, char** argv )
 //			cvReleaseImage(&mask2);
 //		}
 //
+
+		// Maybe replace this with an erode + dilate to give us better control over what's happening?
 		cvSmooth(mask, mask, CV_MEDIAN, 2*2+1);
 
 
