@@ -39,7 +39,7 @@
 
 #define SHOW_GUI 1
 #define PRINT_FPS 1
-#define RUN_WGET 0
+#define RUN_WGET 1
 
 
 using namespace cv;
@@ -164,8 +164,6 @@ int main( int argc, char** argv )
 		printf("wget disabled by #define RUN_WGET 0 in networkTracker.cpp\n");
 	#endif
 
-return 0;
-
 	#if PRINT_FPS
 		timeval start, ends;
 		gettimeofday(&start, 0);
@@ -179,7 +177,7 @@ return 0;
 
 		// make sure that the load did not fail
 		if(frame == NULL) {
-			printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
+			//printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
 			continue;
 		}
 
@@ -187,7 +185,7 @@ return 0;
 			// spawn a side process to do a web-get to fetch the latest frame of the jpg.
 			int childpid = fork();
 			if ( childpid == 0 ) {
-				execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", NULL);
+				execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", "-q", NULL);
 			}
 		#endif
 
@@ -220,10 +218,10 @@ return 0;
 //			IplImage* mask2;
 //		if (minH < maxH)
 		IplImage* mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
-		//thresholdHSV(frame, mask, 0, 40, 96, 195, 144, 216);
+		thresholdHSV(frame, mask, 89, 112, 39, 94, 167, 255);
 
 		//thresholdHSV(frame, mask, 0, 255, 0, 254, 0, 253);
-		mask = cvCloneImage(frame);
+		//mask = cvCloneImage(frame);
 
 
 //		thresholdHSV(frame, mask, minH, maxH, 0, 159, 128, 255);
@@ -276,7 +274,7 @@ return 0;
 		#if RUN_WGET
 			int returnStatus;
 //			waitpid(childpid, &returnStatus, 0);  // Parent process waits here for child to terminate.
-			waitpid(-1, &returnStatus, 0);	// -1 means that the parent process will wait for _all_ child processes to terminate. We're only starting 1 child.
+			waitpid(childpid, &returnStatus, 0);	// -1 means that the parent process will wait for _all_ child processes to terminate. We're only starting 1 child.
 		#endif
 	} // end video frame loop
 } // end main()

@@ -66,8 +66,6 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 	// initialize random seed:
 	srand ( time(NULL) );
 	for (unsigned int i = 0; i < contours.size(); ++i) {
-		//cv::Scalar colour = cv::Scalar( rand()%255, rand()%255, rand()%255 ); // use a random colour to tell each target apart
-    cv::Scalar colour = cv::Scalar( 44, 169, 62 ); // use a random colour to tell each target apart
 
 		// if there are no points in this contour, skip it.
 		if(contours[i].size() <= 0)
@@ -129,6 +127,9 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 
     /******** DRAW STUFF ONTO THE OUTPUT IMAGE ********/
 
+
+    //cv::Scalar colour = cv::Scalar( 44, 169, 62 ); // use a random colour to tell each target apart
+    cv::Scalar colour = cv::Scalar( 237, 19, 75 ); // use a random colour to tell each target apart
 
 		// draw the corner points
 		cv::circle(mat_outputImage, topLeft[i], 8, colour, -1);
