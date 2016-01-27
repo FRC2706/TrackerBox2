@@ -35,7 +35,6 @@
 #include <sys/wait.h>
 #include <pthread.h>	// light multi-threading library
 #include "yaml-cpp/yaml.h"
-#include <zmq.hpp>
 
 #define SHOW_GUI 1
 #define PRINT_FPS 1
