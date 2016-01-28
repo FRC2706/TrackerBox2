@@ -146,8 +146,13 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 
 		// disaplay the skew as a ratio of the height of the left and right sides.
 		// print the text sorta centred below the bottom of the target.
+    float L = (topLeft[i].y - botLeft[i].y);
+    float R = (topRight[i].y - botRight[i].y);
+    float T = (topRight[i].y - topLeft[i].y);
+    float B = (botRight[i].y - botLeft[i].y);
+
 		char text[16];
-		sprintf(text, "%.3f", ((float)topLeft[i].y - botLeft[i].y) / (topRight[i].y - botRight[i].y) );
+		sprintf(text, "%.3f", ((float)((R+L)/2)/((T+B)/2)));
 		cv::Point textLoc( (botLeft[i].x + botRight[i].x)/2, (botLeft[i].y + botRight[i].y)/2 + 30);
 		cv::putText( mat_outputImage, text, textLoc, CV_FONT_HERSHEY_COMPLEX, 0.75, colour);
 	}
