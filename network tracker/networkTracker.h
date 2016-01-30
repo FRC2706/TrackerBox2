@@ -28,32 +28,20 @@
 
 /***** structs for holding network data, and results of computing a frame *****/
 
-struct IPParameters {
-	std::string axisCamAddr;
-	std::string cRIO_IP;
-	std::string cRIO_port;
-};
-
-struct ProfileParameters {
-	int minH;
-	int maxH;
-	int noiseFilterSize;
-	int smootherSize; // Do I still use this?
-};
-
 struct Parameters {
-	IPParameters ipParams;
+	std::string ipCamAddr;
 
-	int activeProfileIdx;
-	ProfileParameters profiles[10];
-};
+	// HSV params
+	int minHue;
+	int maxHue;
+	int minSat;
+	int maxSat;
+	int minVal;
+	int maxVal;
 
-struct ParticleReport {
-	double centerX; // % of screen
-	double centerY; // % of screen
-	double area; // % of screen
-	double velX;
-	double velY;
+	int erodeDilateSize;
+
+	int minTargetArea;
 };
 
 

@@ -4,6 +4,6 @@
 
 #include "networkTracker.h"
 
-void findFRCVisionTargets(IplImage* frame, IplImage* outputImage);
+void findFRCVisionTargets(IplImage* frame, IplImage* outputImage, int minTargetArea);
 
 #endif

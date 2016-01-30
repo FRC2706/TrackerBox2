@@ -3,9 +3,7 @@
 
 
 // TODO: have this return the values. This will require making some new structs.
-void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
-
-  int thresh1=128, thresh2=128;
+void findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetArea) {
 
 	//These are pointers to IPL images, which will hold the result of our calculations
   //	IplImage *outputImage = cvCreateImage(cvSize(img_width,img_height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
@@ -24,7 +22,7 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 
 	//We then detect edges in the image using the Canny algorithm. This will return a binary image, one where the pixel values will be 255 for
 	//pixels that are edges and 0 otherwise. This is unlike other edge detection algorithms like Sobel, which compute greyscale levels.
-	cvCanny(mask, edge_image, (double)thresh1, (double)thresh2, 3); //We use the threshold values from the trackbars and set the window size to 3
+	cvCanny(mask, edge_image, (double)128, (double)128, 3); //We use the threshold values from the trackbars and set the window size to 3
 
 	//The edges returned by the Canny algorithm might have small holes in them, which will cause some problems during contour detection.
 	//The simplest way to solve this problem is to "dilate" the image. This is a morphological operator that will set any pixel in a binary image to 255 (on)
@@ -36,19 +34,10 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 	//"contours" will point to the first contour detected. CV_RETR_TREE means that the function will create a contour hierarchy. Each contour will contain
 	//a pointer to contours that are contained inside it (holes). CV_CHAIN_APPROX_NONE means that all the contours points will be stored. Finally, an offset
 	//value can be specified, but we set it to (0,0).
-//	CvSeq *contours = 0;
-//	cvFindContours(working_image, storage, &contours, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_NONE, cvPoint(0,0));
-//	cvFindContours(working_image, storage, &contours, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0));
-
 	std::vector<std::vector<cv::Point> > contours;
 	cv::Mat mat_working_image(working_image);
 	cv::Mat mat_outputImage(outputImage);
-
 	cv::findContours(mat_working_image, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-
-	//This function will display contours on top of an image. We can specify different colours depending on whether the contour in a hole or not.
-//	cv::drawContours(mat_outputImage, contours, CV_RGB(255,0,0), CV_RGB(0,255,0), MAX_CONTOUR_LEVELS, 1, CV_AA, cvPoint(0,0));
-
 
 	// find the points on the contour that are closest to the outside conerns of the image.
 	std::vector<cv::Point> topLeft(contours.size()); // Top Left Point of Bounding Box
@@ -61,7 +50,7 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 
 	// initialize random seed:
 	srand ( time(NULL) );
-  int numTargetsFound=0;
+	int numTargetsFound=0;
 	for (unsigned int i = 0; i < contours.size(); ++i) {
 
 		// if there are no points in this contour, skip it.
@@ -69,11 +58,10 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 			continue;
 
 		// if this contour has too small an area, skip it.
-    int minArea = 1000;
-		if(contourArea(contours[i]) < minArea)
+		if(contourArea(contours[i]) < minTargetArea)
 			continue;
 
-    numTargetsFound++;
+		numTargetsFound++;
 
 		// Find the bounding box for this target
 		cv::Rect bb;	// the bounding box
@@ -97,38 +85,36 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 		int dist;
 		for(unsigned int j = 1; j < contours[i].size(); ++j){
 			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
-	      if (dist < distTopLeft){
-	         topLeft[i].x = contours[i][j].x;
+		  if (dist < distTopLeft){
+			 topLeft[i].x = contours[i][j].x;
 				topLeft[i].y = contours[i][j].y;
 				distTopLeft = dist;
-	      }
+		  }
 			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
 			if (dist < distBotLeft){
-	         botLeft[i].x = contours[i][j].x;
+			 botLeft[i].x = contours[i][j].x;
 				botLeft[i].y = contours[i][j].y;
 				distBotLeft = dist;
-	      }
+		  }
 			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
 			if (dist < distTopRight){
-	         topRight[i].x = contours[i][j].x;
+			 topRight[i].x = contours[i][j].x;
 				topRight[i].y = contours[i][j].y;
 				distTopRight = dist;
-	      }
+		  }
 			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
 			if (dist < distBotRight){
-	         botRight[i].x = contours[i][j].x;
+			 botRight[i].x = contours[i][j].x;
 				botRight[i].y = contours[i][j].y;
 				distBotRight = dist;
-	      }
+		  }
 		}
 
-    printf("Found %d targets.", numTargetsFound);
-
-    /******** DRAW STUFF ONTO THE OUTPUT IMAGE ********/
+	/******** DRAW STUFF ONTO THE OUTPUT IMAGE ********/
 
 
-    //cv::Scalar colour = cv::Scalar( 44, 169, 62 ); // use a random colour to tell each target apart
-    cv::Scalar colour = cv::Scalar( 237, 19, 75 ); // use a random colour to tell each target apart
+	//cv::Scalar colour = cv::Scalar( 44, 169, 62 ); // use a random colour to tell each target apart
+	cv::Scalar colour = cv::Scalar( 237, 19, 75 ); // use a random colour to tell each target apart
 
 		// draw the corner points
 		cv::circle(mat_outputImage, topLeft[i], 8, colour, -1);
@@ -136,7 +122,7 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 		cv::circle(mat_outputImage, topRight[i], 8, colour, -1);
 		cv::circle(mat_outputImage, botRight[i], 8, colour, -1);
 
-    // set the x coordinates for the bottom points to match the top points since we don't actually care about the X anyways.
+	// set the x coordinates for the bottom points to match the top points since we don't actually care about the X anyways.
 		botLeft[i].x = topLeft[i].x;
 		botRight[i].x = topRight[i].x;
 		cv::drawContours(mat_outputImage, contours, i, colour, 2);	// draw the outline of the object
@@ -145,10 +131,10 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 
 		// disaplay the skew as a ratio of the height of the left and right sides.
 		// print the text sorta centred below the bottom of the target.
-//    float Lheight = (botLeft[i].y - topLeft[i].y);
-//    float Rheight = (botRight[i].y - topRight[i].y);
-//    float Twidth = (topRight[i].x - topLeft[i].x);
-//    float Bwidth = (botRight[i].x - botLeft[i].x);
+//	float Lheight = (botLeft[i].y - topLeft[i].y);
+//	float Rheight = (botRight[i].y - topRight[i].y);
+//	float Twidth = (topRight[i].x - topLeft[i].x);
+//	float Bwidth = (botRight[i].x - botLeft[i].x);
 
 		char text[16];
 		//sprintf(text, "%.3f", ((Rheight+Lheight)/2)/((Twidth+Bwidth)/2));
@@ -157,7 +143,10 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 		cv::putText( mat_outputImage, text, textLoc, CV_FONT_HERSHEY_COMPLEX, 0.75, colour);
 	}
 
-  // free the memory for all the images
+	printf("Found %d targets.  ", numTargetsFound);
+
+
+  // free the memory for all the images we don't need to keep.
   cvReleaseImage(&working_image);
   cvReleaseImage(&edge_image);
 
