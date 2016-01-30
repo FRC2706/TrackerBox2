@@ -26,7 +26,6 @@
 
 #include <highgui.h>
 #include <fstream>
-#include <cstring>      // Needed for memset
 #include <sys/types.h>
 #include <sys/socket.h> // Needed for the socket functions
 #include <netinet/in.h>
@@ -49,19 +48,13 @@ pthread_mutex_t paramsMutex = PTHREAD_MUTEX_INITIALIZER;
 VisionReport mostRecentVR;
 pthread_mutex_t mostRecentPRMutex = PTHREAD_MUTEX_INITIALIZER;
 
-void writeParams(int x) {
-	pthread_mutex_lock( &paramsMutex );
-	writeParametersToFile(p);
-	pthread_mutex_unlock( &paramsMutex );
-}
-
-
 /** Make sure you call
   *	pthread_mutex_lock( &paramsMutex );
   * before you call me!
   */
 void loadParams() {
 	Parameters newP = loadParametersFromFile();
+
 
 	pthread_mutex_lock( &paramsMutex );
 	if (newP != p) {
@@ -75,28 +68,8 @@ void loadParams() {
 }
 
 
-CvPoint COM_center;
-
 int main( int argc, char** argv )
 {
-
-// 	p.ipCamAddr = "http://10.27.6.201/image/jpeg.cgi";
-// 	p.minHue = 45;
-// 	p.maxHue = 75;
-// 	p.minSat = 126;
-// 	p.maxSat = 244;
-// 	p.minVal = 100;
-// 	p.maxVal = 244;
-// 	p.erodeDilateSize = 21;
-// 	p.minTargetArea = 900;
-//
-//
-// 	writeParametersToFile(p);
-//
-// return 0;
-
-
-
 
 	// Start the network server in a seperate thread
 	pthread_t threadDataRequest;
@@ -106,19 +79,6 @@ int main( int argc, char** argv )
 	if (rc){
          cerr << "Error:unable to create thread for the Data Request Server,"<< endl;
 	}
-
-	// now the OpenCV stuff
-	#if SHOW_GUI
-		cvNamedWindow("Result", CV_WINDOW_AUTOSIZE);
-		cvWaitKey(5);
-	#endif
-
-   // copy the parameters.yaml file from the local dir to ramdisk at /dev/shm
-	std::ifstream  src("TrackerBox2_parameters.yaml", std::ios::binary);
-	std::ofstream  dst("/dev/shm/TrackerBox2_parameters.yaml",   std::ios::binary);
-	dst << src.rdbuf();
-	src.close();
-	dst.close();
 
 	loadParams();
 
@@ -131,9 +91,9 @@ int main( int argc, char** argv )
 		int pid = fork();
 		if ( pid == 0 ) {	// in the child process
 			// http://i.imgur.com/5aEOlcW.jpg
-			printf("Connecing to Axis Cam at %s...", p.ipParams.axisCamAddr.c_str());
+			printf("Connecing to Axis Cam at %s...", p.ipCamAddr.c_str());
 			cout.flush();
-			execlp("/usr/bin/wget", "/usr/bin/wget", , "-O", "/dev/shm/camera.jpg", "-q", NULL);
+			execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_LOC, "-q", NULL);
 
 			printf("Done!\n\n\n");
 		}
@@ -162,7 +122,7 @@ int main( int argc, char** argv )
 			// spawn a side process to do a web-get to fetch the latest frame of the jpg.
 			int childpid = fork();
 			if ( childpid == 0 ) {
-				execlp("/usr/bin/wget", "/usr/bin/wget", "http://10.27.6.201/image/jpeg.cgi", "-O", "/dev/shm/camera.jpg", "-q", NULL);
+				execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_LOC, "-q", NULL);
 			}
 		#endif
 
@@ -203,6 +163,7 @@ int main( int argc, char** argv )
 
 		// Now maybe draw a dot and arrow for the COM and vel
 //		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
+// 		CvPoint COM_center;
 //		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
 //		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
 		#if SHOW_GUI
@@ -239,7 +200,7 @@ int main( int argc, char** argv )
 /**
  * This expects a binary mask. It'do weird things if given a 3-channel image.
  */
- // TODO: once we decide ov a vision report, we can work on this.
+ // TODO: once we decide ov a vision report, we can work on this and put it back.
 // void computeParticleReport(IplImage* mask) {
 // 	pthread_mutex_lock( &mostRecentPRMutex );
 // 	ParticleReport prevReport = mostRecentPR;
@@ -291,10 +252,7 @@ int main( int argc, char** argv )
 // }
 
 /**
- * Takes an BGR image.
- *
- * TODO allow special cases of White (high Saturation) and Black (low Value).
- * TODO Search for multiple colours (threshold for each colour and AND their masks together). This will also require modifying the YAML format to have an arbitrary number of colours per profile.
+ * Takes a BGR image.
  * Returns a binary mask which is the result of performing this threshold.
  */
 void thresholdHSV(IplImage* image, IplImage* mask, unsigned char minH, unsigned char maxH, unsigned char minS, unsigned char maxS, unsigned char minV, unsigned char maxV) {
@@ -316,7 +274,7 @@ void thresholdHSV(IplImage* image, IplImage* mask, unsigned char minH, unsigned 
  */
 void *runDataRequestServer(void *placeHolder) {
 	printf("Listening on port %d"
-			" for requests to transmit data.\n", SOCK_CHANGE_DATA_REQUEST_PORT);
+			" for requests to transmit data.\n", SOCK_DATA_REQUEST_PORT);
 
     int sockfd, newsockfd, portno, clilen;
     char buffer[256];
@@ -331,7 +289,7 @@ void *runDataRequestServer(void *placeHolder) {
     }
     /* Initialize socket structure */
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
-    portno = SOCK_CHANGE_DATA_REQUEST_PORT;
+    portno = SOCK_DATA_REQUEST_PORT;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);

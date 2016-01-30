@@ -24,8 +24,6 @@
 #ifndef NETWORK_TRACKER_YAML_UTILS_H
 #define NETWORK_TRACKER_YAML_UTILS_H
 
-#include <fstream>
-#include <iostream>
 #include "yaml-cpp/yaml.h"
 
 #include "networkTracker.h"
@@ -38,12 +36,7 @@ bool operator == (Parameters& p1, Parameters& p2);
 bool operator != (Parameters& p1, Parameters& p2);
 
 #define permanentParamsFile "TrackerBox2_parameters.yaml"
-#define ramdiskPartReportFile "/dev/shm/TrackerBox2_targetReport.yaml"
 
-/** All files are written to and read from RAMDISK at /dev/shm
- * (this is to protect the sd card from wearing out from over-use).
- * The exception to this is the Parameters File which is written to both ramdisk and the sd card each time
- * so that the paremeters persist between shutdowns. **/
 Parameters loadParametersFromFile();
 void writeParametersToFile(Parameters p);
 void writeVisionReportToFile(VisionReport vr);

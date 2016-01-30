@@ -1,6 +1,8 @@
 #include "networkTrackerYAML_utils.h"
 
 #include <unistd.h>
+#include <fstream>
+#include <iostream>
 
 inline float clamp(float x, float a, float b){
     return x < a ? a : (x > b ? b : x);

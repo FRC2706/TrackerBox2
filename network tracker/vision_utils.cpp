@@ -10,16 +10,6 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetAr
 	IplImage *working_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //1 channel for greyscale
 	IplImage *edge_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //We use cvGetSize to make sure the images are the same size.
 
-	//In computer vision, it's always better to work with the smallest images possible, for faster performance.
-	//cvResize will use inter-linear interpolation to fit mask into outputImage (matching the size of the image they gave us).
-//	cvResize(mask, working_image, CV_INTER_LINEAR);
-
-	// smooth out the image to remove some of the holes, it also blurs the result.
-//	cvSmooth(outputImage, outputImage, CV_MEDIAN, 2*2+1);
-
-	//Many computer vision algorithms do not use colour information. Here, we convert from RGB to greyscale before processing further.
-//	cvCvtColor(mask, working_image, CV_RGB2GRAY);
-
 	//We then detect edges in the image using the Canny algorithm. This will return a binary image, one where the pixel values will be 255 for
 	//pixels that are edges and 0 otherwise. This is unlike other edge detection algorithms like Sobel, which compute greyscale levels.
 	cvCanny(mask, edge_image, (double)128, (double)128, 3); //We use the threshold values from the trackbars and set the window size to 3
@@ -116,19 +106,20 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetAr
 	//cv::Scalar colour = cv::Scalar( 44, 169, 62 ); // use a random colour to tell each target apart
 	cv::Scalar colour = cv::Scalar( 237, 19, 75 ); // use a random colour to tell each target apart
 
-		// draw the corner points
-		cv::circle(mat_outputImage, topLeft[i], 8, colour, -1);
-		cv::circle(mat_outputImage, botLeft[i], 8, colour, -1);
-		cv::circle(mat_outputImage, topRight[i], 8, colour, -1);
-		cv::circle(mat_outputImage, botRight[i], 8, colour, -1);
+	// draw the corner points
+	cv::circle(mat_outputImage, topLeft[i], 8, colour, -1);
+	cv::circle(mat_outputImage, botLeft[i], 8, colour, -1);
+	cv::circle(mat_outputImage, topRight[i], 8, colour, -1);
+	cv::circle(mat_outputImage, botRight[i], 8, colour, -1);
 
 	// set the x coordinates for the bottom points to match the top points since we don't actually care about the X anyways.
-		botLeft[i].x = topLeft[i].x;
-		botRight[i].x = topRight[i].x;
-		cv::drawContours(mat_outputImage, contours, i, colour, 2);	// draw the outline of the object
-		cv::line(mat_outputImage, topLeft[i], botLeft[i], colour, 10);
-		cv::line(mat_outputImage, topRight[i], botRight[i], colour, 10);
+	botLeft[i].x = topLeft[i].x;
+	botRight[i].x = topRight[i].x;
+	cv::drawContours(mat_outputImage, contours, i, colour, 2);	// draw the outline of the object
+	cv::line(mat_outputImage, topLeft[i], botLeft[i], colour, 10);
+	cv::line(mat_outputImage, topRight[i], botRight[i], colour, 10);
 
+	// commented out so I can display the area instead.
 		// disaplay the skew as a ratio of the height of the left and right sides.
 		// print the text sorta centred below the bottom of the target.
 //	float Lheight = (botLeft[i].y - topLeft[i].y);
