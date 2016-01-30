@@ -1,9 +1,9 @@
 #ifndef VISION_UTILS__H
 #define VISION_UTILS__H
 
-
+#include "vision_data.h"
 #include "networkTracker.h"
 
-void findFRCVisionTargets(IplImage* frame, IplImage* outputImage, int minTargetArea);
+VisionReport findFRCVisionTargets(IplImage* frame, IplImage* outputImage, int minTargetArea);
 
 #endif

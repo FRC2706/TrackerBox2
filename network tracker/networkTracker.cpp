@@ -36,7 +36,7 @@
 
 #define SHOW_GUI 1
 #define PRINT_FPS 1
-#define RUN_WGET 0
+#define RUN_WGET 1
 
 
 using namespace cv;
@@ -149,11 +149,15 @@ int main( int argc, char** argv )
 
 		// Apply the dilation operations
 		cv::Mat matMask(mask);
+    cv::erode( matMask, matMask, element );
 		cv::dilate( matMask, matMask, element );
-		cv::erode( matMask, matMask, element );
+
 
 		IplImage* outputImage = cvCloneImage(frame);
-		findFRCVisionTargets(mask, outputImage, p.minTargetArea);
+		VisionReport vr = findFRCVisionTargets(mask, outputImage, p.minTargetArea);
+
+		std::cout << "  |  " << vr.targetsFound[0].aspectRatio << " | " << vr.targetsFound[0].ctrX << "|" << vr.targetsFound[0].ctrY << " | " << vr.targetsFound[0].boundingArea << "  |  ";
+		//std::cout << "   |   " << vr.numTargetsFound << "   |   ";
 
 
 		// compute the center of mass of the target we found
@@ -361,7 +365,7 @@ void *runDataRequestServer(void *placeHolder) {
 
 			pthread_mutex_lock( &mostRecentPRMutex );
 			// commented out because I changed what's in the Report struct
-			// n = sprintf(msg, "%f,%f,%f,%f,%f", mostRecentPR.centerX, mostRecentPR.centerY, mostRecentPR.area, mostRecentPR.velX, mostRecentPR.velY);
+		//  n = sprintf(msg, "%f,%f,%f,%f,%f", mostRecentPR.centerX, mostRecentPR.centerY, mostRecentPR.area, mostRecentPR.velX, mostRecentPR.velY);
 			pthread_mutex_unlock( &mostRecentPRMutex );
 
 			printf("message to send: %s\n", msg);

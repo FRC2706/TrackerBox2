@@ -2,13 +2,14 @@
 #define VISION_DATA__H
 
 struct VisionTarget {
-  float centreX;
-  float centreY;
+ float boundingArea;     //% of cam [0, 10]
 
-  float area;
+  //center of target
 
-  float leftHeight;
-  float rightHeight;
+  float ctrX;             //[-1.0,1.0]
+  float ctrY;             //[-1.0,1.0]
+
+  float aspectRatio;
 };
 
 struct VisionReport {

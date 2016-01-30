@@ -1,9 +1,8 @@
 #include "vision_utils.h"
 
 
-
 // TODO: have this return the values. This will require making some new structs.
-void findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetArea) {
+VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetArea) {
 
 	//These are pointers to IPL images, which will hold the result of our calculations
   //	IplImage *outputImage = cvCreateImage(cvSize(img_width,img_height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
@@ -38,9 +37,12 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetAr
 	// I'm cheating and using squared distance because I only need find the smallest so I can avoid doing the slow square-root.
 	long distTopLeft, distBotLeft, distTopRight, distBotRight;
 
+	//cv::Scalar drawColour = cv::Scalar( 44, 169, 62 ); // use a random drawColour to tell each target apart
+	cv::Scalar drawColour = cv::Scalar( 237, 19, 75 ); // use a random drawColour to tell each target apart
+
 	// initialize random seed:
 	srand ( time(NULL) );
-	int numTargetsFound=0;
+	unsigned int numTargetsFound=0;
 	for (unsigned int i = 0; i < contours.size(); ++i) {
 
 		// if there are no points in this contour, skip it.
@@ -50,8 +52,6 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetAr
 		// if this contour has too small an area, skip it.
 		if(contourArea(contours[i]) < minTargetArea)
 			continue;
-
-		numTargetsFound++;
 
 		// Find the bounding box for this target
 		cv::Rect bb;	// the bounding box
@@ -65,81 +65,117 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetAr
 		int bbty = bb.y;					// y coordinate of the top of the bounding box
 		int bbby = bb.y + bb.height;	// y coordinate of the bottem of the bounding box
 
-		topLeft[i] = botLeft[i] = topRight[i] = botRight[i] = contours[i][0];  // Assumes the contour has at least 1 point
+		// topLeft[i] = botLeft[i] = topRight[i] = botRight[i] = contours[i][0];  // Assumes the contour has at least 1 point
+		topLeft.push_back(contours[i][0]);
+		botLeft.push_back(contours[i][0]);
+		topRight.push_back(contours[i][0]);
+		botRight.push_back(contours[i][0]);
 
 		// these should be relative to the target's basic bounding box
-		distTopLeft = (bblx-topLeft[i].x) * (bblx-topLeft[i].x) + (bbty-topLeft[i].y) * (bbty-topLeft[i].y);
-		distBotLeft = (bblx-botLeft[i].x) * (bblx-botLeft[i].x) + (bbby-botLeft[i].y) * (bbby-botLeft[i].y);
-		distTopRight = (bbrx-topRight[i].x) * (bbrx-topRight[i].x) + (bbty-topRight[i].y) * (bbty-topRight[i].y);
-		distBotRight = (bbrx-botRight[i].x) * (bbrx-botRight[i].x) + (bbty-botRight[i].y) * (bbty-botRight[i].y);
+		distTopLeft = (bblx-topLeft[numTargetsFound].x) * (bblx-topLeft[numTargetsFound].x) + (bbty-topLeft[numTargetsFound].y) * (bbty-topLeft[numTargetsFound].y);
+		distBotLeft = (bblx-botLeft[numTargetsFound].x) * (bblx-botLeft[numTargetsFound].x) + (bbby-botLeft[numTargetsFound].y) * (bbby-botLeft[numTargetsFound].y);
+		distTopRight = (bbrx-topRight[numTargetsFound].x) * (bbrx-topRight[numTargetsFound].x) + (bbty-topRight[numTargetsFound].y) * (bbty-topRight[numTargetsFound].y);
+		distBotRight = (bbrx-botRight[numTargetsFound].x) * (bbrx-botRight[numTargetsFound].x) + (bbty-botRight[numTargetsFound].y) * (bbty-botRight[numTargetsFound].y);
 		int dist;
 		for(unsigned int j = 1; j < contours[i].size(); ++j){
 			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
 		  if (dist < distTopLeft){
-			 topLeft[i].x = contours[i][j].x;
-				topLeft[i].y = contours[i][j].y;
+				topLeft[numTargetsFound].x = contours[i][j].x;
+				topLeft[numTargetsFound].y = contours[i][j].y;
 				distTopLeft = dist;
 		  }
 			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
 			if (dist < distBotLeft){
-			 botLeft[i].x = contours[i][j].x;
-				botLeft[i].y = contours[i][j].y;
+				botLeft[numTargetsFound].x = contours[i][j].x;
+				botLeft[numTargetsFound].y = contours[i][j].y;
 				distBotLeft = dist;
 		  }
 			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
 			if (dist < distTopRight){
-			 topRight[i].x = contours[i][j].x;
-				topRight[i].y = contours[i][j].y;
+				topRight[numTargetsFound].x = contours[i][j].x;
+				topRight[numTargetsFound].y = contours[i][j].y;
 				distTopRight = dist;
 		  }
 			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
 			if (dist < distBotRight){
-			 botRight[i].x = contours[i][j].x;
-				botRight[i].y = contours[i][j].y;
+				botRight[numTargetsFound].x = contours[i][j].x;
+				botRight[numTargetsFound].y = contours[i][j].y;
 				distBotRight = dist;
 		  }
 		}
 
 	/******** DRAW STUFF ONTO THE OUTPUT IMAGE ********/
 
-
-	//cv::Scalar colour = cv::Scalar( 44, 169, 62 ); // use a random colour to tell each target apart
-	cv::Scalar colour = cv::Scalar( 237, 19, 75 ); // use a random colour to tell each target apart
-
 	// draw the corner points
-	cv::circle(mat_outputImage, topLeft[i], 8, colour, -1);
-	cv::circle(mat_outputImage, botLeft[i], 8, colour, -1);
-	cv::circle(mat_outputImage, topRight[i], 8, colour, -1);
-	cv::circle(mat_outputImage, botRight[i], 8, colour, -1);
+	cv::circle(mat_outputImage, topLeft[numTargetsFound], 8, drawColour, -1);
+	cv::circle(mat_outputImage, botLeft[numTargetsFound], 8, drawColour, -1);
+	cv::circle(mat_outputImage, topRight[numTargetsFound], 8, drawColour, -1);
+	cv::circle(mat_outputImage, botRight[numTargetsFound], 8, drawColour, -1);
 
 	// set the x coordinates for the bottom points to match the top points since we don't actually care about the X anyways.
-	botLeft[i].x = topLeft[i].x;
-	botRight[i].x = topRight[i].x;
-	cv::drawContours(mat_outputImage, contours, i, colour, 2);	// draw the outline of the object
-	cv::line(mat_outputImage, topLeft[i], botLeft[i], colour, 10);
-	cv::line(mat_outputImage, topRight[i], botRight[i], colour, 10);
+	botLeft[numTargetsFound].x = topLeft[numTargetsFound].x;
+	botRight[numTargetsFound].x = topRight[numTargetsFound].x;
+	cv::drawContours(mat_outputImage, contours, i, drawColour, 2);	// draw the outline of the object
+	cv::line(mat_outputImage, topLeft[numTargetsFound], botLeft[numTargetsFound], drawColour, 10);
+	cv::line(mat_outputImage, topRight[numTargetsFound], botRight[numTargetsFound], drawColour, 10);
 
 	// commented out so I can display the area instead.
 		// disaplay the skew as a ratio of the height of the left and right sides.
 		// print the text sorta centred below the bottom of the target.
-//	float Lheight = (botLeft[i].y - topLeft[i].y);
-//	float Rheight = (botRight[i].y - topRight[i].y);
-//	float Twidth = (topRight[i].x - topLeft[i].x);
-//	float Bwidth = (botRight[i].x - botLeft[i].x);
+	// float Lheight = (botLeft[i].y - topLeft[i].y);
+	// float Rheight = (botRight[i].y - topRight[i].y);
+	// float Twidth = (topRight[i].x - topLeft[i].x);
+	// float Bwidth = (botRight[i].x - botLeft[i].x);
 
 		char text[16];
 		//sprintf(text, "%.3f", ((Rheight+Lheight)/2)/((Twidth+Bwidth)/2));
 		sprintf(text, "%.1f", contourArea(contours[i]));
 		cv::Point textLoc( (botLeft[i].x + botRight[i].x)/2, (botLeft[i].y + botRight[i].y)/2 + 30);
-		cv::putText( mat_outputImage, text, textLoc, CV_FONT_HERSHEY_COMPLEX, 0.75, colour);
+		cv::putText( mat_outputImage, text, textLoc, CV_FONT_HERSHEY_COMPLEX, 0.75, drawColour);
+
+		numTargetsFound++;
 	}
 
 	printf("Found %d targets.  ", numTargetsFound);
 
 
+
+
+	// Bundle the data into structs to hand back to the roboRIO.
+
+	VisionReport vr;
+
+	vr.numTargetsFound = numTargetsFound;
+	vr.targetsFound = new VisionTarget[numTargetsFound];
+
+	for (unsigned int i = 0; i < numTargetsFound; i++)
+	{
+		float Lheight = (botLeft[i].y - topLeft[i].y);
+		float Rheight = (botRight[i].y - topRight[i].y);
+		float Twidth = (topRight[i].x - topLeft[i].x);
+		float Bwidth = (botRight[i].x - botLeft[i].x);
+
+		vr.targetsFound[i].aspectRatio = ((Rheight + Lheight) / 2) / ((Twidth + Bwidth) / 2);
+
+		// size of the image
+		// mask->width, mask->height
+		int meanXpx = (botLeft[i].x + botRight[i].x) / 2;
+		int meanYpx = (((topLeft[i].y + botLeft[i].y) / 2) + ((topRight[i].y + botRight[i].y) / 2)) / 2;
+
+		vr.targetsFound[i].ctrX = (meanXpx - ((float)mask->width / 2)) / ((float)mask->width / 2);
+		vr.targetsFound[i].ctrY = (meanYpx - ((float)mask->height / 2)) / ((float)mask->height / 2);
+
+		vr.targetsFound[i].boundingArea = (((Lheight + Rheight) / 2) * (Bwidth)) / ((float)mask->width * (float)mask->height);
+		// draw the centre dot
+		cv::circle(mat_outputImage, cv::Point(meanXpx, meanYpx), 13, drawColour, -1);
+
+
+	}
+
   // free the memory for all the images we don't need to keep.
   cvReleaseImage(&working_image);
   cvReleaseImage(&edge_image);
 
-//  outputImage = mat_outputImage;
+	//  outputImage = mat_outputImage;
+	return vr;
 }
