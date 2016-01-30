@@ -217,7 +217,7 @@ int main( int argc, char** argv )
 //			IplImage* mask2;
 //		if (minH < maxH)
 		IplImage* mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
-		thresholdHSV(frame, mask, 37, 66, 89, 255, 177, 255);
+		thresholdHSV(frame, mask, 45, 75, 126, 244, 100, 244);
 
 		//thresholdHSV(frame, mask, 0, 255, 0, 254, 0, 253);
 		//mask = cvCloneImage(frame);
@@ -240,7 +240,7 @@ int main( int argc, char** argv )
 		// Maybe replace this with an erode + dilate to give us better control over what's happening?
 		//cvSmooth(mask, mask, CV_MEDIAN, 2*2+1);
 
-		int dilation_size = 2;
+		int dilation_size = 21;
 		Mat element = cv::getStructuringElement( cv::MORPH_RECT,
 		                                       Size( 2*dilation_size + 1, 2*dilation_size+1 ),
 		                                       Point( dilation_size, dilation_size ) );
@@ -248,7 +248,7 @@ int main( int argc, char** argv )
 			// Apply the dilation operations
 			cv::Mat matMask(mask);
 		  cv::dilate( matMask, matMask, element );
-			cv::erode( matMask, matMask, element );
+      cv::erode( matMask, matMask, element );
 
 		// todo: change the output image to `mask`
 		//IplImage* outputImage = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);

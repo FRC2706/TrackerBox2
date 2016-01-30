@@ -45,10 +45,6 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 	cv::Mat mat_outputImage(outputImage);
 
 	cv::findContours(mat_working_image, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-  if (contours.size() > 0)
-	 printf("Found %d targets.  ", (int) contours[0].size());
-  else
-    printf("Found 0 targets.  ");
 
 	//This function will display contours on top of an image. We can specify different colours depending on whether the contour in a hole or not.
 //	cv::drawContours(mat_outputImage, contours, CV_RGB(255,0,0), CV_RGB(0,255,0), MAX_CONTOUR_LEVELS, 1, CV_AA, cvPoint(0,0));
@@ -65,6 +61,7 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 
 	// initialize random seed:
 	srand ( time(NULL) );
+  int numTargetsFound=0;
 	for (unsigned int i = 0; i < contours.size(); ++i) {
 
 		// if there are no points in this contour, skip it.
@@ -72,9 +69,11 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 			continue;
 
 		// if this contour has too small an area, skip it.
-		if(contourArea(contours[i]) < 100)
+    int minArea = 1000;
+		if(contourArea(contours[i]) < minArea)
 			continue;
 
+    numTargetsFound++;
 
 		// Find the bounding box for this target
 		cv::Rect bb;	// the bounding box
@@ -123,7 +122,7 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 	      }
 		}
 
-
+    printf("Found %d targets.", numTargetsFound);
 
     /******** DRAW STUFF ONTO THE OUTPUT IMAGE ********/
 
@@ -146,13 +145,14 @@ void findFRCVisionTargets(IplImage* mask, IplImage* outputImage) {
 
 		// disaplay the skew as a ratio of the height of the left and right sides.
 		// print the text sorta centred below the bottom of the target.
-    float L = (topLeft[i].y - botLeft[i].y);
-    float R = (topRight[i].y - botRight[i].y);
-    float T = (topRight[i].y - topLeft[i].y);
-    float B = (botRight[i].y - botLeft[i].y);
+//    float Lheight = (botLeft[i].y - topLeft[i].y);
+//    float Rheight = (botRight[i].y - topRight[i].y);
+//    float Twidth = (topRight[i].x - topLeft[i].x);
+//    float Bwidth = (botRight[i].x - botLeft[i].x);
 
 		char text[16];
-		sprintf(text, "%.3f", ((float)((R+L)/2)/((T+B)/2)));
+		//sprintf(text, "%.3f", ((Rheight+Lheight)/2)/((Twidth+Bwidth)/2));
+		sprintf(text, "%.1f", contourArea(contours[i]));
 		cv::Point textLoc( (botLeft[i].x + botRight[i].x)/2, (botLeft[i].y + botRight[i].y)/2 + 30);
 		cv::putText( mat_outputImage, text, textLoc, CV_FONT_HERSHEY_COMPLEX, 0.75, colour);
 	}
