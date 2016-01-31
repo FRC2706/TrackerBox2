@@ -65,7 +65,6 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 		int bbty = bb.y;					// y coordinate of the top of the bounding box
 		int bbby = bb.y + bb.height;	// y coordinate of the bottem of the bounding box
 
-		// topLeft[i] = botLeft[i] = topRight[i] = botRight[i] = contours[i][0];  // Assumes the contour has at least 1 point
 		topLeft.push_back(contours[i][0]);
 		botLeft.push_back(contours[i][0]);
 		topRight.push_back(contours[i][0]);
@@ -119,17 +118,17 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 	cv::line(mat_outputImage, topLeft[numTargetsFound], botLeft[numTargetsFound], drawColour, 10);
 	cv::line(mat_outputImage, topRight[numTargetsFound], botRight[numTargetsFound], drawColour, 10);
 
-	// commented out so I can display the area instead.
+		// commented out so I can display the area instead.
 		// disaplay the skew as a ratio of the height of the left and right sides.
 		// print the text sorta centred below the bottom of the target.
-	// float Lheight = (botLeft[i].y - topLeft[i].y);
-	// float Rheight = (botRight[i].y - topRight[i].y);
-	// float Twidth = (topRight[i].x - topLeft[i].x);
-	// float Bwidth = (botRight[i].x - botLeft[i].x);
+		float Lheight = (botLeft[i].y - topLeft[i].y);
+		float Rheight = (botRight[i].y - topRight[i].y);
+		float Twidth = (topRight[i].x - topLeft[i].x);
+		float Bwidth = (botRight[i].x - botLeft[i].x);
 
 		char text[16];
-		//sprintf(text, "%.3f", ((Rheight+Lheight)/2)/((Twidth+Bwidth)/2));
-		sprintf(text, "%.1f", contourArea(contours[i]));
+		sprintf(text, "%.3f", ((Rheight+Lheight)/2)/((Twidth+Bwidth)/2));
+		// sprintf(text, "%.1f", contourArea(contours[i]));
 		cv::Point textLoc( (botLeft[i].x + botRight[i].x)/2, (botLeft[i].y + botRight[i].y)/2 + 30);
 		cv::putText( mat_outputImage, text, textLoc, CV_FONT_HERSHEY_COMPLEX, 0.75, drawColour);
 
@@ -137,8 +136,6 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 	}
 
 	printf("Found %d targets.  ", numTargetsFound);
-
-
 
 
 	// Bundle the data into structs to hand back to the roboRIO.
@@ -166,16 +163,14 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 		vr.targetsFound[i].ctrY = (meanYpx - ((float)mask->height / 2)) / ((float)mask->height / 2);
 
 		vr.targetsFound[i].boundingArea = (((Lheight + Rheight) / 2) * (Bwidth)) / ((float)mask->width * (float)mask->height);
+
 		// draw the centre dot
 		cv::circle(mat_outputImage, cv::Point(meanXpx, meanYpx), 13, drawColour, -1);
-
-
 	}
 
-  // free the memory for all the images we don't need to keep.
+  // Free the memory for the images we don't need to keep.
   cvReleaseImage(&working_image);
   cvReleaseImage(&edge_image);
 
-	//  outputImage = mat_outputImage;
 	return vr;
 }
