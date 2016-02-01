@@ -14,6 +14,12 @@ Linux packages that need to be installed:
   - libyaml-cpp-dev
   - libboost-dev
   - libopencv-dev
+   
+To install these packages type
+
+    sudo apt-get install libyaml-cpp-dev libboost-dev libopencv-dev
+
+## Compiling
 
 To compile, do the following from a terminal on the Raspberry Pi:
 
@@ -23,6 +29,8 @@ To compile, do the following from a terminal on the Raspberry Pi:
 The makefile that's there should take care of all the heavy-lifting.
 
 ~~ This will need a longer description on how to compile the code, a brief guide to using it (ie calibration etc) and a link to the paper, once published ~~
+
+## Running
 
 Run it with
 
