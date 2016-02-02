@@ -177,6 +177,9 @@ int main( int argc, char** argv )
 			cvWaitKey(5);	// give a pause for the openCV GUI to draw
 		#endif
 
+		cvSaveImage(MASK_FILE, mask);
+		cvSaveImage(OUTPUT_FILE, outputImage);
+
 		cvReleaseImage(&frame);
 		cvReleaseImage(&mask);
 		cvReleaseImage(&outputImage);

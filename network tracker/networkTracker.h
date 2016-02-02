@@ -24,6 +24,8 @@
 
 // let's have wget fetch the image from the camera to the system ramdisk so we don't wear out the SD card with a ton of writes.
 #define WGET_PIC_LOC "/dev/shm/camera.jpg"
+#define MASK_FILE "/dev/shm/mask.jpg"
+#define OUTPUT_FILE "/dev/shm/output.jpg"
 
 /***** structs for holding network data, and results of computing a frame *****/
 
