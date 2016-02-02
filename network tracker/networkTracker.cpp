@@ -136,9 +136,7 @@ int main( int argc, char** argv )
 
 
 
-
-
-		// Do some processing on the image
+		// Do the image processing
 
 		IplImage* mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 		thresholdHSV(frame, mask, p.minHue, p.maxHue, p.minSat, p.maxSat, p.minVal, p.maxVal);
@@ -147,7 +145,7 @@ int main( int argc, char** argv )
 		                                       Size( 2*p.erodeDilateSize + 1, 2*p.erodeDilateSize+1 ),
 		                                       Point( p.erodeDilateSize, p.erodeDilateSize ) );
 
-		// Apply the dilation operations
+		// Apply the erosion-dilation smoothing operations
 		cv::Mat matMask(mask);
     cv::erode( matMask, matMask, element );
 		cv::dilate( matMask, matMask, element );
@@ -156,22 +154,10 @@ int main( int argc, char** argv )
 		IplImage* outputImage = cvCloneImage(frame);
 		VisionReport vr = findFRCVisionTargets(mask, outputImage, p.minTargetArea);
 
-		std::cout << "  |  " << vr.targetsFound[0].aspectRatio << " | " << vr.targetsFound[0].ctrX << "|" << vr.targetsFound[0].ctrY << " | " << vr.targetsFound[0].boundingArea << "  |  ";
-		//std::cout << "   |   " << vr.numTargetsFound << "   |   ";
+		std::cout << " | " << vr.targetsFound[0].aspectRatio << " | " << vr.targetsFound[0].ctrX << " | " << vr.targetsFound[0].ctrY << " | " << vr.targetsFound[0].boundingArea << " | ";
 
 
-		// compute the center of mass of the target we found
-		// TODO I need to make a new version of this for this year's game
-//		computeParticleReport(mask);
-
-
-		// Now maybe draw a dot and arrow for the COM and vel
-//		IplImage* maskPlusCOM = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 3);
-// 		CvPoint COM_center;
-//		cvCvtColor(mask, maskPlusCOM, CV_GRAY2BGR);
-//		cvCircle(maskPlusCOM, COM_center, 15, CV_RGB(0,230,40), -1);
 		#if SHOW_GUI
-			// cvShowImage("Raw Image", frame);
 			cvShowImage("Binary Mask", mask);
 			cvShowImage("Result", outputImage);
 			cvWaitKey(5);	// give a pause for the openCV GUI to draw
@@ -180,6 +166,8 @@ int main( int argc, char** argv )
 		cvSaveImage(MASK_FILE, mask);
 		cvSaveImage(OUTPUT_FILE, outputImage);
 
+
+		// release the memory of the images we created.
 		cvReleaseImage(&frame);
 		cvReleaseImage(&mask);
 		cvReleaseImage(&outputImage);
@@ -191,72 +179,6 @@ int main( int argc, char** argv )
 	} // end video frame loop
 } // end main()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * This expects a binary mask. It'do weird things if given a 3-channel image.
- */
- // TODO: once we decide ov a vision report, we can work on this and put it back.
-// void computeParticleReport(IplImage* mask) {
-// 	pthread_mutex_lock( &mostRecentPRMutex );
-// 	ParticleReport prevReport = mostRecentPR;
-// 	pthread_mutex_unlock( &mostRecentPRMutex );
-//
-// 	ParticleReport pr;
-//
-// 	int xAccum, yAccum, areaAccum;
-// 	xAccum = yAccum = areaAccum = 0;
-//
-// 	// compute COM of the mask!
-// 	for (int i = 0; i < mask->width; i++)
-// 		for (int j = 0; j < mask->height; j++)
-// 			// if this pixel is a 1
-// 			if (mask->imageData[mask->widthStep * j + i]) {
-// 				areaAccum++;
-// 				xAccum += i;
-// 				yAccum += j;
-// 			}
-// 	// average
-// 	COM_center.x = pr.centerX = ((double) xAccum) / areaAccum;
-// 	COM_center.y = pr.centerY = ((double) yAccum) / areaAccum;
-//
-// 	// This is just here for posterity - turns out that the matrix algebra is actually slower than the loops. *sigh*
-// 	//~ COM_center.x = pr.centerX = mean(*Xidxs, Mat(mask)/255.0 ).val[0];
-// 	//~ COM_center.y = pr.centerY = mean(*Yidxs, Mat(mask)/255.0 ).val[0];
-//
-// 	// normalize to [-1, 1]
-// 	pr.centerX = (( 2*pr.centerX / mask->width) - 1);
-// 	pr.centerY = (( 2*pr.centerY / mask->height) - 1);
-// 	pr.area = ((double) cvCountNonZero(mask)) / (mask->width*mask->height);
-//
-// 	// smooth a little bit
-// 	float alpha = 0.4;
-// 	pr.velX = alpha*(pr.centerX - prevReport.centerX) + (1-alpha)*prevReport.velX;
-// 	pr.velY = alpha*(pr.centerY - prevReport.centerY) + (1-alpha)*prevReport.velY;
-//
-// 	// check for NANs (ie divide-by-zero) - this is probably completely unnecessary
-// 	if(isnan(pr.centerX)) pr.centerX = 0.0;
-// 	if(isnan(pr.centerY)) pr.centerY = 0.0;
-// 	if(isnan(pr.area)) pr.area = 0.0;
-// 	if(isnan(pr.velX)) pr.velX = 0.0;
-// 	if(isnan(pr.velY)) pr.velY = 0.0;
-//
-// 	pthread_mutex_lock( &mostRecentPRMutex );
-// 	mostRecentPR = pr;
-// 	writeParticleReportToFile(pr);
-// 	pthread_mutex_unlock( &mostRecentPRMutex );
-// }
 
 /**
  * Takes a BGR image.
