@@ -5,5 +5,5 @@ minSat: 170
 minHue: 40
 maxSat: 255
 maxVal: 255
-minVal: 50
+minVal: 10
 maxHue: 255
