@@ -36,7 +36,10 @@
 
 #define SHOW_GUI 1
 #define PRINT_FPS 1
-#define RUN_WGET 1
+// #define RUN_WGET 1
+
+// 0 = No Camera, file from disk (camera.jpg) | 1 = IP Camera (or fetch image from web address) | 2 = USB Camera (or internal laptop cam)
+#define CAMERA_TYPE 1
 
 
 using namespace cv;
@@ -84,10 +87,17 @@ int main( int argc, char** argv )
 
 	IplImage* frame;
 
-	 // Note: for examples of how to connect openCV directly to a camera, see older versions of this file on github
 
-	 // spawn a side process to do a web-get to fetch the latest frame of the jpg.
-	#if RUN_WGET
+	// Set up the camera - based on what type of camera we're using
+	#if CAMERA_TYPE == 0
+		// No Camera, file from disk (camera.jpg)
+
+		// nothing to do here
+
+	#elif CAMERA_TYPE == 1
+		// IP Camera (or fetch image from web address)
+
+		// spawn a side process to do a web-get to fetch the latest frame of the jpg.
 		int pid = fork();
 		if ( pid == 0 ) {	// in the child process
 			// http://i.imgur.com/5aEOlcW.jpg
@@ -97,9 +107,20 @@ int main( int argc, char** argv )
 
 			printf("Done!\n\n\n");
 		}
+	#elif CAMERA_TYPE == 2
+		// USB Camera (or internal laptop cam)
+
+    CvCapture* capture;
+		printf("Opening USB webcam...");
+		cout.flush();
+		capture = cvCaptureFromCAM(0); // laptop's webcam
+		frame = cvQueryFrame( capture );
+		printf("Done!\n\n\n");
 	#else
-		printf("wget disabled by #define RUN_WGET 0 in networkTracker.cpp\n");
+		printf("Invalid option set for #define CAMERA_TYPE");
+		exit -1;
 	#endif
+
 
 	#if PRINT_FPS
 		timeval start, ends;
@@ -109,22 +130,34 @@ int main( int argc, char** argv )
 	// Main frame loop
 	while(1) {
 
-		// load the latest frame from the ramdisk
-		frame = cvLoadImage( "/dev/shm/camera.jpg" );
+		// Load the new frame - based on what type of camera we're using
+		#if CAMERA_TYPE == 0
+			// No Camera, file from disk (camera.jpg)
+			frame = cvLoadImage( "camera.jpg");
 
-		// make sure that the load did not fail
-		if(frame == NULL) {
-			//printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
-			continue;
-		}
+		#elif CAMERA_TYPE == 1
+			// IP Camera (or fetch image from web address)
 
-		#if RUN_WGET
+			// load the latest frame that was fetched (load it from the ramdisk)
+			frame = cvLoadImage( "/dev/shm/camera.jpg" );
+
+			// make sure that the load did not fail
+			if(frame == NULL) {
+				//printf("No Image from camera %s\n", p.ipParams.axisCamAddr.c_str());
+				continue;
+			}
+
 			// spawn a side process to do a web-get to fetch the latest frame of the jpg.
 			int childpid = fork();
 			if ( childpid == 0 ) {
 				execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_LOC, "-q", NULL);
 			}
+
+		#elif CAMERA_TYPE == 2
+			// USB Camera (or internal laptop cam)
+			frame = cvQueryFrame( capture );
 		#endif
+
 
 		loadParams();
 
@@ -172,7 +205,8 @@ int main( int argc, char** argv )
 		cvReleaseImage(&mask);
 		cvReleaseImage(&outputImage);
 
-		#if RUN_WGET
+		#if CAMERA_TYPE == 1
+			// IP Camera (or fetch image from web address)
 			int returnStatus;
 			waitpid(childpid, &returnStatus, 0);	// -1 means that the parent process will wait for _all_ child processes to terminate. We're only starting 1 child.
 		#endif
