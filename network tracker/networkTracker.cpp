@@ -38,7 +38,9 @@
 #define PRINT_FPS 1
 // #define RUN_WGET 1
 
-// 0 = No Camera, file from disk (camera.jpg) | 1 = IP Camera (or fetch image from web address) | 2 = USB Camera (or internal laptop cam)
+// 0 = No Camera, file from disk (camera.jpg)
+// 1 = IP Camera (or fetch image from web address)
+// 2 = USB Camera (or internal laptop cam)
 #define CAMERA_TYPE 1
 
 
@@ -101,7 +103,7 @@ int main( int argc, char** argv )
 		int pid = fork();
 		if ( pid == 0 ) {	// in the child process
 			// http://i.imgur.com/5aEOlcW.jpg
-			printf("Connecing to Axis Cam at %s...", p.ipCamAddr.c_str());
+			printf("Connecing to IP Cam at %s...", p.ipCamAddr.c_str());
 			cout.flush();
 			execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_LOC, "-q", NULL);
 
@@ -156,6 +158,8 @@ int main( int argc, char** argv )
 		#elif CAMERA_TYPE == 2
 			// USB Camera (or internal laptop cam)
 			frame = cvQueryFrame( capture );
+
+									printf("HERE!\n");
 		#endif
 
 
@@ -173,14 +177,13 @@ int main( int argc, char** argv )
 
 		IplImage* mask = cvCreateImage(cvSize(frame->width, frame->height), frame->depth, 1);
 		thresholdHSV(frame, mask, p.minHue, p.maxHue, p.minSat, p.maxSat, p.minVal, p.maxVal);
-
 		Mat element = cv::getStructuringElement( cv::MORPH_RECT,
 		                                       Size( 2*p.erodeDilateSize + 1, 2*p.erodeDilateSize+1 ),
 		                                       Point( p.erodeDilateSize, p.erodeDilateSize ) );
 
 		// Apply the erosion-dilation smoothing operations
 		cv::Mat matMask(mask);
-    cv::erode( matMask, matMask, element );
+		cv::erode( matMask, matMask, element );
 		cv::dilate( matMask, matMask, element );
 
 
@@ -201,7 +204,10 @@ int main( int argc, char** argv )
 
 
 		// release the memory of the images we created.
-		cvReleaseImage(&frame);
+		#if CAMERA_TYPE != 2
+			// in the case of a USB webcam, cvQueryFrame(...) does its own memory management
+			cvReleaseImage(&frame);
+		#endif
 		cvReleaseImage(&mask);
 		cvReleaseImage(&outputImage);
 
