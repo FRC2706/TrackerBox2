@@ -1,75 +1,35 @@
-/**
- * Written for the FIRST Robotics Competition
- * Copyright 2014 Mike Ounsworth
- * ounsworth@gmail.com
- *
- * This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
+package org.usfirst.frc.team2706.robot.vision;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 public class TrackerBox2 {
-
-	public final String RPi_addr;
+	public static final String CAMERA_IP = "10.27.6.231";
+	public static final float DEFAULT_PAN = 0.5f;
+	public static final float DEFAULT_TILT = 1;
+	public  String RPi_addr;
 	public final int changeProfilePort = 1181;
-	public final int getVisionDataPort = 1182;
-
-	class ParticleReport {
-		double centerX; // % of screen
-		double centerY; // % of screen
-		double area; // % of screen
-		double velX;
-		double velY;
-		
-		public String toString() {
-			return "center: ("+centerX+","+centerY+")\narea: "+area+"\nvelocity: ("+velX+","+velY+")";
-		}
+	public final  int getVisionDataPort = 1182;
+	public class TargetObject {
+		  public float boundingArea = -1;     // % of cam [0, 1.0]
+		  //center of target
+		  public float ctrX = DEFAULT_PAN;             // [-1.0, 1.0]
+		  public float ctrY = DEFAULT_TILT;             // [-1.0, 1.0]
+		  // the aspect ratio of the target we found. This can be used directly as a poor-man's measure of skew.
+		  public float aspectRatio = -1;
+/*		public String toString() {
+			return ctrX + "," + ctrY + "," + boundingArea + "," + aspectRatio;
+		}*/
 	}
 	
 	public TrackerBox2(String raspberryPiAddress) {
 		RPi_addr = raspberryPiAddress;
 	}
-	
-	public void changeProfile(int newProfileNum) {
+	@SuppressWarnings("deprecation")
+	public  ArrayList<TargetObject> getVisionData() {
+		ArrayList<TargetObject> prList = new ArrayList<>(); 
 		try{
-			Socket sock = new Socket(RPi_addr, changeProfilePort);
-			
-			OutputStream outToServer = sock.getOutputStream();
-			
-			DataOutputStream out = new DataOutputStream(outToServer);
-			
-			System.out.println("Sending request to switch to Profile "+Integer.toString(newProfileNum));
-			out.writeUTF( Integer.toString(newProfileNum) );
-			
-			sock.close();
-		} catch ( UnknownHostException e) {
-			System.out.println("Host unknown: "+RPi_addr);
-			return;
-		} catch (java.net.ConnectException e) {
-			System.out.println("TrackerBox Raspberry Pi is either not connected, or is not at address " + RPi_addr);
-			return;
-		} catch( IOException e) {
-			e.printStackTrace();
-			return;
-		}
-		
-	}
-	
-	public ParticleReport getVisionData() {
-		ParticleReport pr = new ParticleReport();
-		try{
+			System.out.println("testing");
 			Socket sock = new Socket(RPi_addr, getVisionDataPort);
 			
 			OutputStream outToServer = sock.getOutputStream();
@@ -84,15 +44,25 @@ public class TrackerBox2 {
 			try {
 				rawData = in.readLine();
 //				System.out.println("I got back: " + rawData);
-				String[] tokens = rawData.split(",");
-				pr.centerX 	= Double.parseDouble(tokens[0]);
-				pr.centerY 	= Double.parseDouble(tokens[1]);
-				pr.area 	= Double.parseDouble(tokens[2]);
-				pr.velX 	= Double.parseDouble(tokens[3]);
-				pr.velY		= Double.parseDouble(tokens[4]);
+				if(rawData.length() == 0) {
+					prList.add(new TargetObject());
+				}
+				String[] targets = rawData.split(":");
+				System.out.println(rawData);
+				for(String target : targets) {
+					TargetObject pr = new TargetObject();
+					String[] targetData = target.split(",");
+					pr.ctrX = Float.parseFloat(targetData[0]);
+					pr.ctrY	= Float.parseFloat(targetData[1]);
+					pr.aspectRatio = Float.parseFloat(targetData[2]);
+					pr.boundingArea = Float.parseFloat(targetData[3]);
+					System.out.println("Network call finished, current location is: " + pr.ctrX + "," + pr.ctrY + ", and aspectRatio and boundingArea is: " + pr.aspectRatio + "," + pr.boundingArea);
+					prList.add(pr);
+				}
+
 //				System.out.println("ParticleReport:\n" + pr);
 			} catch (java.io.EOFException e) {
-				System.out.println("TrackerBox2: Communication Error");
+				System.out.println("Camera: Communication Error");
 			}
 			
 			sock.close();
@@ -100,14 +70,16 @@ public class TrackerBox2 {
 			System.out.println("Host unknown: "+RPi_addr);
 			return null;
 		} catch (java.net.ConnectException e) {
-			System.out.println("TrackerBox Raspberry Pi is either not connected, or is not at address " + RPi_addr);
+			System.out.println("Camera initialization failed at: " + RPi_addr);
 			return null;
 		} catch( IOException e) {
 			e.printStackTrace();
 			return null;
 		}
-		return pr;
+		System.out.println("Network call successful, returning not null data...");
+		return prList;
 	}
+
 
 
 }
