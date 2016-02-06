@@ -35,13 +35,13 @@
 #include <pthread.h>	// light multi-threading library
 
 #define SHOW_GUI 1
-#define PRINT_FPS 1
+#define PRINT_FPS 0
 // #define RUN_WGET 1
 
 // 0 = No Camera, file from disk (camera.jpg)
 // 1 = IP Camera (or fetch image from web address)
 // 2 = USB Camera (or internal laptop cam)
-#define CAMERA_TYPE 1
+#define CAMERA_TYPE 0
 
 
 using namespace cv;
@@ -50,6 +50,7 @@ using namespace std;
 Parameters p;
 pthread_mutex_t paramsMutex = PTHREAD_MUTEX_INITIALIZER;
 
+// Thread-shared variable, needs a mutex
 VisionReport mostRecentVR;
 pthread_mutex_t mostRecentPRMutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -188,10 +189,12 @@ int main( int argc, char** argv )
 
 
 		IplImage* outputImage = cvCloneImage(frame);
-		VisionReport vr = findFRCVisionTargets(mask, outputImage, p.minTargetArea);
+		mostRecentVR = findFRCVisionTargets(mask, outputImage, p.minTargetArea);
 
-		std::cout << " | " << vr.targetsFound[0].aspectRatio << " | " << vr.targetsFound[0].ctrX << " | " << vr.targetsFound[0].ctrY << " | " << vr.targetsFound[0].boundingArea << " | ";
-
+		//std::cout << " | " << mostRecentVR.targetsFound[0].aspectRatio << " | " << mostRecentVR.targetsFound[0].ctrX << " | " << mostRecentVR.targetsFound[0].ctrY << " | " << mostRecentVR.targetsFound[0].boundingArea << " | ";
+		#if PRINT_FPS
+			printf("Found %d targets.  ", mostRecentVR.numTargetsFound);
+		#endif
 
 		#if SHOW_GUI
 			cvShowImage("Binary Mask", mask);
@@ -277,8 +280,6 @@ void *runDataRequestServer(void *placeHolder) {
     listen(sockfd,5);
     clilen = sizeof(cli_addr);
 
-//	ParticleReport pr;
-
 	while(1) {
 		printf("Waiting for new connection.\n");
 		/* Accept actual connection from the client */
@@ -299,8 +300,6 @@ void *runDataRequestServer(void *placeHolder) {
 
 		setsockopt(newsockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(struct timeval));
 
-	//	timeval start, ends;
-	//	gettimeofday(&start, 0);
 		while(1) {
 		    printf("Waiting for request.\n");
 			/* Accept actual connection from the client */
@@ -326,16 +325,24 @@ void *runDataRequestServer(void *placeHolder) {
 			printf("Received a request for the particle data.\n");
 
 			/* read the current particle report from "particleReport.yaml" and send it back */
-			char msg[256];
+			// char msg[mostRecentVR.numTargetsFound * 24 + 1];
+			char msg[2048]; // let's just make this big.
 
 			pthread_mutex_lock( &mostRecentPRMutex );
-			// commented out because I changed what's in the Report struct
-		//  n = sprintf(msg, "%f,%f,%f,%f,%f", mostRecentPR.centerX, mostRecentPR.centerY, mostRecentPR.area, mostRecentPR.velX, mostRecentPR.velY);
+			int charsWritten = 0;
+
+			printf("numTargetsFound: %d\n",mostRecentVR.numTargetsFound );
+			for (int w = 0; w < mostRecentVR.numTargetsFound; w++)
+			{
+				// commented out because I changed what's in the Report struct
+		  		charsWritten += sprintf(&msg[w*24], "%.3f,%.3f,%.3f,%.3f:", mostRecentVR.targetsFound[w].ctrX, mostRecentVR.targetsFound[w].ctrY, mostRecentVR.targetsFound[w].aspectRatio, mostRecentVR.targetsFound[w].boundingArea);
+				printf("charsWritten: %d\n", charsWritten);
+			}
 			pthread_mutex_unlock( &mostRecentPRMutex );
 
 			printf("message to send: %s\n", msg);
 
-			n = write(newsockfd,msg,n);
+			n = write(newsockfd,msg,charsWritten);
 			if (n < 0)
 			{
 				perror("ERROR writing to socket");
@@ -343,6 +350,7 @@ void *runDataRequestServer(void *placeHolder) {
 				break;
 			}
 			printf("Sent!\n");
+
 		} // inner loop
 		close(newsockfd);
 		printf("Succesfully closed connection.\n");

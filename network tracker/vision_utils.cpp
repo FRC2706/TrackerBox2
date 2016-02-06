@@ -135,8 +135,6 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 		numTargetsFound++;
 	}
 
-	printf("Found %d targets.  ", numTargetsFound);
-
 
 	// Bundle the data into structs to hand back to the roboRIO.
 
