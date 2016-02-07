@@ -9,7 +9,18 @@ public class TestMain {
 
 
 		public static void main(String[] args) {
-			new TrackerBox2(RPI_IP).getVisionData();
+
+			TrackerBox2 trackerbox = new TrackerBox2(RPI_IP);
+			// simalute a roboRIO asking for the data at 50 hz
+			while (true) {
+				trackerbox.getVisionData();
+
+				try {
+					Thread.sleep(20);
+				} catch (InterruptedException e) {
+					continue;
+				}
+			}
 		}
 
 }

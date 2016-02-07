@@ -30,13 +30,17 @@ public class TrackerBox2 {
 		System.out.println("Setting up Sockets");
 		try (
 			Socket sock = new Socket(RPi_addr, visionDataPort);
+
 			PrintWriter outToServer = new PrintWriter(sock.getOutputStream(), true);
 
 			BufferedReader inFromServer = new BufferedReader( new InputStreamReader(sock.getInputStream()));
 		) {
+			sock.setTcpNoDelay(true);
+			
 			System.out.println("Sending request to TrackerBox2 for vision data");
 			// out.writeUTF( " " ); // basically send an empty message
 			outToServer.println(""); // basically send an empty message
+			outToServer.flush();
 
 			String rawData = "";
 			try {

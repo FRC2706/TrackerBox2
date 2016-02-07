@@ -29,13 +29,15 @@
 #include <sys/types.h>
 #include <sys/socket.h> // Needed for the socket functions
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <pthread.h>	// light multi-threading library
 
-#define SHOW_GUI 1
-#define PRINT_FPS 1
+#define SHOW_GUI 0
+#define PRINT_FPS 0
+#define PRINT_NETWORK_DEBUGGING 1
 
 // 0 = No Camera, file from disk (camera.jpg)
 // 1 = IP Camera (or fetch image from web address)
@@ -248,8 +250,10 @@ void thresholdHSV(IplImage* image, IplImage* mask, unsigned char minH, unsigned 
  * frame that was processed.
  */
 void *runDataRequestServer(void *placeHolder) {
+	#if PRINT_NETWORK_DEBUGGING
 	printf("Listening on port %d"
 			" for requests to transmit data.\n", SOCK_DATA_REQUEST_PORT);
+	#endif
 
     int sockfd, newsockfd, portno, clilen;
     char buffer[256];
@@ -262,6 +266,14 @@ void *runDataRequestServer(void *placeHolder) {
         perror("ERROR opening socket");
         exit(1);
     }
+
+	// disable Nagle's algorithm - should make the send faster.
+	int flag = 0;
+	if(setsockopt(sockfd,IPPROTO_TCP,TCP_NODELAY,(char *)&flag,sizeof(flag)) == -1) {
+        perror("ERROR opening socket");
+        exit(1);
+    }
+
     /* Initialize socket structure */
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
     portno = SOCK_DATA_REQUEST_PORT;
@@ -284,7 +296,10 @@ void *runDataRequestServer(void *placeHolder) {
     clilen = sizeof(cli_addr);
 
 	while(1) {
+		#if PRINT_NETWORK_DEBUGGING
 		printf("Waiting for new connection.\n");
+		#endif
+
 		/* Accept actual connection from the client */
 		newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
 				                        (socklen_t *)&clilen);
@@ -295,7 +310,9 @@ void *runDataRequestServer(void *placeHolder) {
 	//		    exit(1);
 			continue;
 		}
+		#if PRINT_NETWORK_DEBUGGING
 		printf("Got a new connection!\n");
+		#endif
 
 		struct timeval tv;
 		tv.tv_sec = 10; // 10 second timeout
@@ -304,7 +321,9 @@ void *runDataRequestServer(void *placeHolder) {
 		setsockopt(newsockfd, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(struct timeval));
 
 		while(1) {
+			#if PRINT_NETWORK_DEBUGGING
 		    printf("Waiting for request.\n");
+			#endif
 			/* Accept actual connection from the client */
 	//		newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
 	//		                            (socklen_t *)&clilen);
@@ -325,7 +344,9 @@ void *runDataRequestServer(void *placeHolder) {
 				break;
 			}
 
+			#if PRINT_NETWORK_DEBUGGING
 			printf("Received a request for the particle data.\n");
+			#endif
 
 			/* read the current particle report from "particleReport.yaml" and send it back */
 			// char msg[mostRecentVR.numTargetsFound * 24 + 1];
@@ -334,16 +355,24 @@ void *runDataRequestServer(void *placeHolder) {
 			pthread_mutex_lock( &mostRecentPRMutex );
 			int charsWritten = 0;
 
+			#if PRINT_NETWORK_DEBUGGING
 			printf("numTargetsFound: %d\n",mostRecentVR.numTargetsFound );
+			#endif
+
 			for (int w = 0; w < mostRecentVR.numTargetsFound; w++)
 			{
 				// commented out because I changed what's in the Report struct
 		  		charsWritten += sprintf(&msg[w*24], "%.3f,%.3f,%.3f,%.3f:", mostRecentVR.targetsFound[w].ctrX, mostRecentVR.targetsFound[w].ctrY, mostRecentVR.targetsFound[w].aspectRatio, mostRecentVR.targetsFound[w].boundingArea);
+
+				#if PRINT_NETWORK_DEBUGGING
 				printf("charsWritten: %d\n", charsWritten);
+				#endif
 			}
 			pthread_mutex_unlock( &mostRecentPRMutex );
 
+			#if PRINT_NETWORK_DEBUGGING
 			printf("message to send: %s\n", msg);
+			#endif
 
 			n = write(newsockfd,msg,charsWritten);
 			if (n < 0)
@@ -352,11 +381,16 @@ void *runDataRequestServer(void *placeHolder) {
 				//exit(1);
 				break;
 			}
+			#if PRINT_NETWORK_DEBUGGING
 			printf("Sent!\n");
+			#endif
 
 		} // inner loop
 		close(newsockfd);
+
+		#if PRINT_NETWORK_DEBUGGING
 		printf("Succesfully closed connection.\n");
+		#endif
 	} // outer loop
 	pthread_exit(0);
 }
