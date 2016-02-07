@@ -1,4 +1,4 @@
-package org.usfirst.frc.team2706.robot.vision;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -21,24 +21,24 @@ public class TrackerBox2 {
 			return ctrX + "," + ctrY + "," + boundingArea + "," + aspectRatio;
 		}*/
 	}
-	
+
 	public TrackerBox2(String raspberryPiAddress) {
 		RPi_addr = raspberryPiAddress;
 	}
 	@SuppressWarnings("deprecation")
 	public  ArrayList<TargetObject> getVisionData() {
-		ArrayList<TargetObject> prList = new ArrayList<>(); 
+		ArrayList<TargetObject> prList = new ArrayList<>();
 		try{
 			System.out.println("testing");
 			Socket sock = new Socket(RPi_addr, getVisionDataPort);
-			
+
 			OutputStream outToServer = sock.getOutputStream();
-			
+
 			DataOutputStream out = new DataOutputStream(outToServer);
-			
+
 //			System.out.println("Sending request to TrackerBox2 for vision data");
 			out.writeUTF( " " ); // basically send an empty message
-			
+
 			String rawData = "";
 			DataInputStream in = new DataInputStream(sock.getInputStream());
 			try {
@@ -64,7 +64,7 @@ public class TrackerBox2 {
 			} catch (java.io.EOFException e) {
 				System.out.println("Camera: Communication Error");
 			}
-			
+
 			sock.close();
 		} catch ( UnknownHostException e) {
 			System.out.println("Host unknown: "+RPi_addr);
