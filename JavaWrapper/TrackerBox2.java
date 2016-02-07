@@ -4,17 +4,14 @@ import java.net.*;
 import java.util.ArrayList;
 
 public class TrackerBox2 {
-	public static final String CAMERA_IP = "10.27.6.231";
-	public static final float DEFAULT_PAN = 0.5f;
-	public static final float DEFAULT_TILT = 1;
 	public  String RPi_addr;
-	public final int changeProfilePort = 1181;
 	public final  int getVisionDataPort = 1182;
+
 	public class TargetObject {
 		  public float boundingArea = -1;     // % of cam [0, 1.0]
 		  //center of target
-		  public float ctrX = DEFAULT_PAN;             // [-1.0, 1.0]
-		  public float ctrY = DEFAULT_TILT;             // [-1.0, 1.0]
+		  public float ctrX = -1;             // [-1.0, 1.0]
+		  public float ctrY = -1;             // [-1.0, 1.0]
 		  // the aspect ratio of the target we found. This can be used directly as a poor-man's measure of skew.
 		  public float aspectRatio = -1;
 /*		public String toString() {
@@ -25,6 +22,7 @@ public class TrackerBox2 {
 	public TrackerBox2(String raspberryPiAddress) {
 		RPi_addr = raspberryPiAddress;
 	}
+
 	@SuppressWarnings("deprecation")
 	public  ArrayList<TargetObject> getVisionData() {
 		ArrayList<TargetObject> prList = new ArrayList<>();
@@ -60,7 +58,6 @@ public class TrackerBox2 {
 					prList.add(pr);
 				}
 
-//				System.out.println("ParticleReport:\n" + pr);
 			} catch (java.io.EOFException e) {
 				System.out.println("Camera: Communication Error");
 			}
