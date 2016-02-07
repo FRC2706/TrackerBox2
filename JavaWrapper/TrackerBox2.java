@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class TrackerBox2 {
 	public  String RPi_addr;
-	public final  int getVisionDataPort = 1182;
+	public final  int visionDataPort = 1182;
 
 	public class TargetObject {
 		  public float boundingArea = -1;     // % of cam [0, 1.0]
@@ -23,38 +23,39 @@ public class TrackerBox2 {
 		RPi_addr = raspberryPiAddress;
 	}
 
-	@SuppressWarnings("deprecation")
+	//@SuppressWarnings("deprecation")
 	public  ArrayList<TargetObject> getVisionData() {
 		ArrayList<TargetObject> prList = new ArrayList<>();
-		try{
-			System.out.println("testing");
-			Socket sock = new Socket(RPi_addr, getVisionDataPort);
 
-			OutputStream outToServer = sock.getOutputStream();
+		System.out.println("Setting up Sockets");
+		try (
+			Socket sock = new Socket(RPi_addr, visionDataPort);
+			PrintWriter outToServer = new PrintWriter(sock.getOutputStream(), true);
 
-			DataOutputStream out = new DataOutputStream(outToServer);
-
-//			System.out.println("Sending request to TrackerBox2 for vision data");
-			out.writeUTF( " " ); // basically send an empty message
+			BufferedReader inFromServer = new BufferedReader( new InputStreamReader(sock.getInputStream()));
+		) {
+			System.out.println("Sending request to TrackerBox2 for vision data");
+			// out.writeUTF( " " ); // basically send an empty message
+			outToServer.println(""); // basically send an empty message
 
 			String rawData = "";
-			DataInputStream in = new DataInputStream(sock.getInputStream());
 			try {
-				rawData = in.readLine();
-//				System.out.println("I got back: " + rawData);
+				rawData = inFromServer.readLine();
+				System.out.println("I got back: " + rawData);
 				if(rawData.length() == 0) {
 					prList.add(new TargetObject());
 				}
 				String[] targets = rawData.split(":");
-				System.out.println(rawData);
 				for(String target : targets) {
-					TargetObject pr = new TargetObject();
 					String[] targetData = target.split(",");
+
+					TargetObject pr = new TargetObject();
 					pr.ctrX = Float.parseFloat(targetData[0]);
 					pr.ctrY	= Float.parseFloat(targetData[1]);
 					pr.aspectRatio = Float.parseFloat(targetData[2]);
 					pr.boundingArea = Float.parseFloat(targetData[3]);
-					System.out.println("Network call finished, current location is: " + pr.ctrX + "," + pr.ctrY + ", and aspectRatio and boundingArea is: " + pr.aspectRatio + "," + pr.boundingArea);
+
+					System.out.println("Target found at: " + pr.ctrX + "," + pr.ctrY + ", and aspectRatio and boundingArea is: " + pr.aspectRatio + "," + pr.boundingArea);
 					prList.add(pr);
 				}
 
