@@ -35,8 +35,7 @@
 #include <pthread.h>	// light multi-threading library
 
 #define SHOW_GUI 1
-#define PRINT_FPS 0
-// #define RUN_WGET 1
+#define PRINT_FPS 1
 
 // 0 = No Camera, file from disk (camera.jpg)
 // 1 = IP Camera (or fetch image from web address)
@@ -95,7 +94,11 @@ int main( int argc, char** argv )
 	#if CAMERA_TYPE == 0
 		// No Camera, file from disk (camera.jpg)
 
-		// nothing to do here
+		// make sure there's a file called camera.jpg
+		if( access( "camera.jpg", F_OK ) ) {
+			printf("To run without a camera attached, please place a file called 'camera.jpg' in the current directory.\n");
+			exit(-1);
+		}
 
 	#elif CAMERA_TYPE == 1
 		// IP Camera (or fetch image from web address)
