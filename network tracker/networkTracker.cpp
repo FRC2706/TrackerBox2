@@ -324,20 +324,10 @@ void *runDataRequestServer(void *placeHolder) {
 			#if PRINT_NETWORK_DEBUGGING
 		    printf("Waiting for request.\n");
 			#endif
-			/* Accept actual connection from the client */
-	//		newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
-	//		                            (socklen_t *)&clilen);
-	//		if (newsockfd < 0)
-	//		{
-	//		    perror("ERROR on accept");
-	////		    exit(1);
-	//			continue;
-	//		}
-	//		printf("Got a new connection!");
-			/* If connection is established then start communicating */
 
 			memset(buffer, 0, 256);
-			n = recv( newsockfd,buffer,255,0 );
+			// n = recv( newsockfd,buffer,255,0 );
+			n = read(newsockfd, buffer, 256);
 			if (n <= 0)
 			{
 				perror("ERROR reading from socket");
@@ -359,7 +349,8 @@ void *runDataRequestServer(void *placeHolder) {
 			printf("numTargetsFound: %d\n",mostRecentVR.numTargetsFound );
 			#endif
 
-			for (int w = 0; w < mostRecentVR.numTargetsFound; w++)
+			int w;
+			for (w = 0; w < mostRecentVR.numTargetsFound; w++)
 			{
 				// commented out because I changed what's in the Report struct
 		  		charsWritten += sprintf(&msg[w*24], "%.3f,%.3f,%.3f,%.3f:", mostRecentVR.targetsFound[w].ctrX, mostRecentVR.targetsFound[w].ctrY, mostRecentVR.targetsFound[w].aspectRatio, mostRecentVR.targetsFound[w].boundingArea);
@@ -368,7 +359,11 @@ void *runDataRequestServer(void *placeHolder) {
 				printf("charsWritten: %d\n", charsWritten);
 				#endif
 			}
+			// the last one should not have a ':'
+			msg[(w)*24 -1] = '\0';
+
 			pthread_mutex_unlock( &mostRecentPRMutex );
+
 
 			#if PRINT_NETWORK_DEBUGGING
 			printf("message to send: %s\n", msg);

@@ -7,6 +7,8 @@ public class TrackerBox2 {
 	public  String RPi_addr;
 	public final  int visionDataPort = 1182;
 
+	public boolean PRINT_STUFF = false;
+
 	public class TargetObject {
 		  public float boundingArea = -1;     // % of cam [0, 1.0]
 		  //center of target
@@ -27,25 +29,33 @@ public class TrackerBox2 {
 	public  ArrayList<TargetObject> getVisionData() {
 		ArrayList<TargetObject> prList = new ArrayList<>();
 
-		System.out.println("Setting up Sockets");
+		if(PRINT_STUFF)
+			System.out.println("Setting up Sockets");
+
 		try (
 			Socket sock = new Socket(RPi_addr, visionDataPort);
 
 			PrintWriter outToServer = new PrintWriter(sock.getOutputStream(), true);
 
-			BufferedReader inFromServer = new BufferedReader( new InputStreamReader(sock.getInputStream()));
+			// BufferedReader inFromServer = new BufferedReader( new InputStreamReader(sock.getInputStream()));
 		) {
-			sock.setTcpNoDelay(true);
-			
-			System.out.println("Sending request to TrackerBox2 for vision data");
-			// out.writeUTF( " " ); // basically send an empty message
+			if(PRINT_STUFF)
+				System.out.println("Sending request to TrackerBox2 for vision data");
 			outToServer.println(""); // basically send an empty message
 			outToServer.flush();
 
-			String rawData = "";
+			byte[] rawBytes = new byte[2048];
 			try {
-				rawData = inFromServer.readLine();
-				System.out.println("I got back: " + rawData);
+				// rawData = inFromServer.read();
+				if( sock.getInputStream().read(rawBytes) < 0 ) {
+					System.out.println("Something went wrong reading response from TrackerBox2");
+					return null;
+				}
+
+				String rawData = new String(rawBytes);
+				if(PRINT_STUFF)
+					System.out.println("I got back: " + rawData);
+
 				if(rawData.length() == 0) {
 					prList.add(new TargetObject());
 				}
@@ -59,7 +69,9 @@ public class TrackerBox2 {
 					pr.aspectRatio = Float.parseFloat(targetData[2]);
 					pr.boundingArea = Float.parseFloat(targetData[3]);
 
-					System.out.println("Target found at: " + pr.ctrX + "," + pr.ctrY + ", and aspectRatio and boundingArea is: " + pr.aspectRatio + "," + pr.boundingArea);
+					if(PRINT_STUFF)
+						System.out.println("Target found at: " + pr.ctrX + "," + pr.ctrY + ", and aspectRatio and boundingArea is: " + pr.aspectRatio + "," + pr.boundingArea);
+
 					prList.add(pr);
 				}
 
@@ -78,7 +90,9 @@ public class TrackerBox2 {
 			e.printStackTrace();
 			return null;
 		}
-		System.out.println("Network call successful, returning not null data...");
+		if(PRINT_STUFF)
+			System.out.println("Network call successful, returning not null data...");
+
 		return prList;
 	}
 
