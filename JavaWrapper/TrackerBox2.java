@@ -16,9 +16,10 @@ public class TrackerBox2 {
 		  public float ctrY = -1;             // [-1.0, 1.0]
 		  // the aspect ratio of the target we found. This can be used directly as a poor-man's measure of skew.
 		  public float aspectRatio = -1;
-/*		public String toString() {
-			return ctrX + "," + ctrY + "," + boundingArea + "," + aspectRatio;
-		}*/
+
+			public String toString() {
+				return "position: (" + ctrX + ", " + ctrY + "), boundingArea: " + boundingArea + ", aspectRatio: " + aspectRatio;
+			}
 	}
 
 	public TrackerBox2(String raspberryPiAddress) {
