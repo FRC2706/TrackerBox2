@@ -105,16 +105,30 @@ int main( int argc, char** argv )
 	#elif CAMERA_TYPE == 1
 		// IP Camera (or fetch image from web address)
 
-		// spawn a side process to do a web-get to fetch the latest frame of the jpg.
-		int pid = fork();
-		if ( pid == 0 ) {	// in the child process
-			// http://i.imgur.com/5aEOlcW.jpg
-			printf("Connecing to IP Cam at %s...", p.ipCamAddr.c_str());
-			cout.flush();
-			execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_LOC, "-q", NULL);
+		// remove the temp camera file, if it was there from a previous run
+		unlink(WGET_PIC_FILE);
 
-			printf("Done!\n\n\n");
+		// keep calling wget until an image is successfully returned from the camera
+		while( access( WGET_PIC_FILE, F_OK ) == -1 ) // check if the file exists yet
+
+			// spawn a side process to do a web-get to fetch the latest frame of the jpg.
+			int pid = fork();
+			if ( pid == 0 ) {	// in the child process
+				// http://i.imgur.com/5aEOlcW.jpg
+				printf("Connecing to IP Cam at %s...", p.ipCamAddr.c_str());
+				cout.flush();
+				execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_FILE, "-q", "--timeout", "1", NULL);
+
+				exit(0);	// note that exec only returns if there was an error, on success it calls exit(0) and kills the thread.
+							// In the error case we want to exit also
+			}
+
+			// in the parent process, wait for the wget process to either succeed, or fail.
+			int returnStatus;
+			waitpid(childpid, &returnStatus, 0);	// -1 means that the parent process will wait for _all_ child processes to terminate. We're only starting 1 child.
 		}
+		printf("Done. Camera Connected!\n");
+
 	#elif CAMERA_TYPE == 2
 		// USB Camera (or internal laptop cam)
 
@@ -147,7 +161,7 @@ int main( int argc, char** argv )
 			// IP Camera (or fetch image from web address)
 
 			// load the latest frame that was fetched (load it from the ramdisk)
-			frame = cvLoadImage( "/dev/shm/camera.jpg" );
+			frame = cvLoadImage( WGET_PIC_FILE );
 
 			// make sure that the load did not fail
 			if(frame == NULL) {
@@ -158,7 +172,7 @@ int main( int argc, char** argv )
 			// spawn a side process to do a web-get to fetch the latest frame of the jpg.
 			int childpid = fork();
 			if ( childpid == 0 ) {
-				execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_LOC, "-q", NULL);
+				execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_FILE, "-q", NULL);
 			}
 
 		#elif CAMERA_TYPE == 2
