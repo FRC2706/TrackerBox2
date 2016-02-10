@@ -366,7 +366,7 @@ void *runDataRequestServer(void *placeHolder) {
 				#endif
 			}
 			// the last one should not have a ':'
-			msg[(w)*24 -1] = '\0';
+			// msg[(w)*24 -1] = '\0';
 
 			pthread_mutex_unlock( &mostRecentPRMutex );
 

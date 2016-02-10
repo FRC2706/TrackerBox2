@@ -1,5 +1,6 @@
 
 
+import java.util.ArrayList;
 
 public class TestMain {
 
@@ -12,12 +13,18 @@ public class TestMain {
 
 			TrackerBox2 trackerbox = new TrackerBox2(RPI_IP);
 
+			if (trackerbox == null)
+				return;
+
 			// // simalute a roboRIO asking for the data at 50 hz
 			while (true) {
-				ArrayList<TargetObject> targets = trackerbox.getVisionData();
+				ArrayList<TrackerBox2.TargetObject> targets = trackerbox.getVisionData();
+
+				if (targets == null)
+					return;
 
 				System.out.println("I found "+targets.size()+" targets.");
-				for(TargetObject target : targets)
+				for(TrackerBox2.TargetObject target : targets)
 					System.out.println("\tI found: "+target.toString());
 
 				System.out.println();

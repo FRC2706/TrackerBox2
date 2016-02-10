@@ -7,7 +7,7 @@ public class TrackerBox2 {
 	public  String RPi_addr;
 	public final  int visionDataPort = 1182;
 
-	public boolean PRINT_STUFF = false;
+	public boolean PRINT_STUFF = true;
 
 	public class TargetObject {
 		  public float boundingArea = -1;     // % of cam [0, 1.0]
@@ -59,23 +59,28 @@ public class TrackerBox2 {
 
 				if(rawData.length() == 0) {
 					prList.add(new TargetObject());
+					System.out.println("No Targets Found");
+				} else {
+					String[] targets = rawData.split(":");
+					for(String target : targets) {
+						try {
+							String[] targetData = target.split(",");
+
+							TargetObject pr = new TargetObject();
+							pr.ctrX = Float.parseFloat(targetData[0]);
+							pr.ctrY	= Float.parseFloat(targetData[1]);
+							pr.aspectRatio = Float.parseFloat(targetData[2]);
+							pr.boundingArea = Float.parseFloat(targetData[3]);
+
+							if(PRINT_STUFF)
+								System.out.println("Target found at: " + pr.ctrX + "," + pr.ctrY + ", and aspectRatio and boundingArea is: " + pr.aspectRatio + "," + pr.boundingArea);
+
+							prList.add(pr);
+						} catch (NumberFormatException e) {
+							continue;
+						}
+					}
 				}
-				String[] targets = rawData.split(":");
-				for(String target : targets) {
-					String[] targetData = target.split(",");
-
-					TargetObject pr = new TargetObject();
-					pr.ctrX = Float.parseFloat(targetData[0]);
-					pr.ctrY	= Float.parseFloat(targetData[1]);
-					pr.aspectRatio = Float.parseFloat(targetData[2]);
-					pr.boundingArea = Float.parseFloat(targetData[3]);
-
-					if(PRINT_STUFF)
-						System.out.println("Target found at: " + pr.ctrX + "," + pr.ctrY + ", and aspectRatio and boundingArea is: " + pr.aspectRatio + "," + pr.boundingArea);
-
-					prList.add(pr);
-				}
-
 			} catch (java.io.EOFException e) {
 				System.out.println("Camera: Communication Error");
 			}
