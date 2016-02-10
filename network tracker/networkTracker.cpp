@@ -36,13 +36,13 @@
 #include <pthread.h>	// light multi-threading library
 
 #define SHOW_GUI 0
-#define PRINT_FPS 0
+#define PRINT_FPS 1
 #define PRINT_NETWORK_DEBUGGING 1
 
 // 0 = No Camera, file from disk (camera.jpg)
 // 1 = IP Camera (or fetch image from web address)
 // 2 = USB Camera (or internal laptop cam)
-#define CAMERA_TYPE 0
+#define CAMERA_TYPE 1
 
 
 using namespace cv;
@@ -105,28 +105,20 @@ int main( int argc, char** argv )
 	#elif CAMERA_TYPE == 1
 		// IP Camera (or fetch image from web address)
 
-		// remove the temp camera file, if it was there from a previous run
-		unlink(WGET_PIC_FILE);
-
-		// keep calling wget until an image is successfully returned from the camera
-		while( access( WGET_PIC_FILE, F_OK ) == -1 ) // check if the file exists yet
-
-			// spawn a side process to do a web-get to fetch the latest frame of the jpg.
-			int pid = fork();
-			if ( pid == 0 ) {	// in the child process
-				// http://i.imgur.com/5aEOlcW.jpg
-				printf("Connecing to IP Cam at %s...", p.ipCamAddr.c_str());
-				cout.flush();
-				execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_FILE, "-q", "--timeout", "1", NULL);
-
-				exit(0);	// note that exec only returns if there was an error, on success it calls exit(0) and kills the thread.
-							// In the error case we want to exit also
-			}
-
-			// in the parent process, wait for the wget process to either succeed, or fail.
-			int returnStatus;
-			waitpid(childpid, &returnStatus, 0);	// -1 means that the parent process will wait for _all_ child processes to terminate. We're only starting 1 child.
+		// spawn a side process to do a web-get to fetch the latest frame of the jpg.
+		int childpid = fork();
+		if ( childpid == 0 ) {	// in the child process
+			// http://i.imgur.com/5aEOlcW.jpg
+			printf("Connecing to IP Cam at %s...", p.ipCamAddr.c_str());
+			cout.flush();
+			execlp( WGET_COMMAND );
+			exit(0);	// note that exec only returns if there was an error, on success it calls exit(0) and kills the thread.
+						// In the error case we want to exit also
 		}
+
+		// in the parent process, wait for the wget process to either succeed, or fail.
+		int returnStatus;
+		waitpid(childpid, &returnStatus, 0);	// -1 means that the parent process will wait for _all_ child processes to terminate. We're only starting 1 child.
 		printf("Done. Camera Connected!\n");
 
 	#elif CAMERA_TYPE == 2
@@ -172,7 +164,7 @@ int main( int argc, char** argv )
 			// spawn a side process to do a web-get to fetch the latest frame of the jpg.
 			int childpid = fork();
 			if ( childpid == 0 ) {
-				execlp("/usr/bin/wget", "/usr/bin/wget", p.ipCamAddr.c_str(), "-O", WGET_PIC_FILE, "-q", NULL);
+				execlp( WGET_COMMAND );
 			}
 
 		#elif CAMERA_TYPE == 2

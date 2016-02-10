@@ -23,9 +23,11 @@
 #include <cv.h>
 
 // let's have wget fetch the image from the camera to the system ramdisk so we don't wear out the SD card with a ton of writes.
-#define WGET_PIC_LOC "/dev/shm/camera.jpg"
+#define WGET_PIC_FILE "/dev/shm/camera.jpg"
 #define MASK_FILE "/dev/shm/mask.jpg"
 #define OUTPUT_FILE "/dev/shm/output.jpg"
+
+#define WGET_COMMAND "/usr/bin/wget", "/usr/bin/wget", "-q", "--timeout=5", "--retry-connrefused", "--waitretry=1", "--read-timeout=2", "-t", "0", p.ipCamAddr.c_str(), "-O", WGET_PIC_FILE, NULL
 
 /***** structs for holding network data, and results of computing a frame *****/
 
