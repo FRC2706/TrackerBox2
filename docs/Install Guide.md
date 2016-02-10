@@ -74,7 +74,13 @@ Open `/etc/profile`
   
 add the following lines anywhere in the file:
 
-    TODO
+    # run trackerbox2 at startup
+    # in case it crashes, let's just call it again!
+    while true
+    do
+	    (cd /home/pi/trackerbox2/network\ tracker; ./trackerbox2)
+    done
+
 
 ## Using Trackerbox 2 with a picture from disk (mode 0)
 
