@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 public class TestMain {
 
-		// public static final String RPI_IP = "10.27.6.231";
+		public static final String RPI_IP = "10.27.6.240";
 
-		public static final String RPI_IP = "127.0.0.1";
+		// public static final String RPI_IP = "127.0.0.1";
 
 
 		public static void main(String[] args) {
@@ -20,8 +20,14 @@ public class TestMain {
 			while (true) {
 				ArrayList<TrackerBox2.TargetObject> targets = trackerbox.getVisionData();
 
-				if (targets == null)
-					return;
+				if (targets == null) {
+					try {
+						Thread.sleep(20);
+						continue;
+					} catch (InterruptedException e) {
+						continue;
+					}
+				}
 
 				System.out.println("I found "+targets.size()+" targets.");
 				for(TrackerBox2.TargetObject target : targets)

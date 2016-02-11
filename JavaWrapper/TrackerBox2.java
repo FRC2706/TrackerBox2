@@ -33,13 +33,16 @@ public class TrackerBox2 {
 		if(PRINT_STUFF)
 			System.out.println("Setting up Sockets");
 
-		try (
-			Socket sock = new Socket(RPi_addr, visionDataPort);
+		Socket sock = new Socket();
+		try {
+			sock.connect(new InetSocketAddress(RPi_addr, visionDataPort), 20);
+		} catch (Exception e) {
+			return null;
+		}
 
+		try {
 			PrintWriter outToServer = new PrintWriter(sock.getOutputStream(), true);
 
-			// BufferedReader inFromServer = new BufferedReader( new InputStreamReader(sock.getInputStream()));
-		) {
 			if(PRINT_STUFF)
 				System.out.println("Sending request to TrackerBox2 for vision data");
 			outToServer.println(""); // basically send an empty message
@@ -48,8 +51,9 @@ public class TrackerBox2 {
 			byte[] rawBytes = new byte[2048];
 			try {
 				// rawData = inFromServer.read();
+				int n;
 				if( sock.getInputStream().read(rawBytes) < 0 ) {
-					System.out.println("Something went wrong reading response from TrackerBox2");
+					System.out.println("Something went wrong reading response from TrackerBox2: ");
 					return null;
 				}
 

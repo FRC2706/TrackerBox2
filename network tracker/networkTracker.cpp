@@ -365,8 +365,12 @@ void *runDataRequestServer(void *placeHolder) {
 				printf("charsWritten: %d\n", charsWritten);
 				#endif
 			}
-			// the last one should not have a ':'
-			// msg[(w)*24 -1] = '\0';
+			if (mostRecentVR.numTargetsFound == 0) {
+				msg[0] = '\0';
+			} else {
+				// the last one should not have a ':'
+				msg[(w)*24 -1] = '\0';
+			}
 
 			pthread_mutex_unlock( &mostRecentPRMutex );
 
