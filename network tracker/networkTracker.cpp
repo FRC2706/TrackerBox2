@@ -42,7 +42,7 @@
 // 0 = No Camera, file from disk (camera.jpg)
 // 1 = IP Camera (or fetch image from web address)
 // 2 = USB Camera (or internal laptop cam)
-#define CAMERA_TYPE 0
+#define CAMERA_TYPE 1
 
 
 using namespace cv;
