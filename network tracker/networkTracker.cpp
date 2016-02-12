@@ -40,9 +40,10 @@
 #define PRINT_NETWORK_DEBUGGING 1
 
 // 0 = No Camera, file from disk (camera.jpg)
-// 1 = IP Camera (or fetch image from web address)
-// 2 = USB Camera (or internal laptop cam)
-#define CAMERA_TYPE 1
+// 1 = IP Camera -- streaming with OpenCV's codecs
+// 2 = IP Camera -- fetch image from web address using a file downloader (here because not all cameras stream properly)
+// 3 = USB Camera (or internal laptop cam)
+#define CAMERA_TYPE 2
 
 
 using namespace cv;
@@ -103,7 +104,19 @@ int main( int argc, char** argv )
 		}
 
 	#elif CAMERA_TYPE == 1
-		// IP Camera (or fetch image from web address)
+		// IP Camera -- streaming with OpenCV's codecs
+
+		CvCapture* capture;
+
+		printf("Connecing to IP Cam at %s...", p.ipCamAddr.c_str());
+		cout.flush();
+		capture = cvCaptureFromFile(p.ipCamAddr.c_str()); // use the ethernet Axis Cam
+
+		frame = cvQueryFrame( capture );
+		printf("Done!\n\n\n");
+
+	#elif CAMERA_TYPE == 2
+		// IP Camera -- fetch image from web address using a file downloader (here because not all cameras stream properly)
 
 		// spawn a side process to do a web-get to fetch the latest frame of the jpg.
 		int childpid = fork();
@@ -121,7 +134,7 @@ int main( int argc, char** argv )
 		waitpid(childpid, &returnStatus, 0);	// -1 means that the parent process will wait for _all_ child processes to terminate. We're only starting 1 child.
 		printf("Done. Camera Connected!\n");
 
-	#elif CAMERA_TYPE == 2
+	#elif CAMERA_TYPE == 3
 		// USB Camera (or internal laptop cam)
 
     CvCapture* capture;
@@ -150,7 +163,11 @@ int main( int argc, char** argv )
 			frame = cvLoadImage( "camera.jpg");
 
 		#elif CAMERA_TYPE == 1
-			// IP Camera (or fetch image from web address)
+			// IP Camera -- streaming with OpenCV's codecs
+			frame = cvQueryFrame( capture );
+
+		#elif CAMERA_TYPE == 2
+			// IP Camera -- fetch image from web address using a file downloader (here because not all cameras stream properly)
 
 			// load the latest frame that was fetched (load it from the ramdisk)
 			frame = cvLoadImage( WGET_PIC_FILE );
@@ -167,11 +184,9 @@ int main( int argc, char** argv )
 				execlp( WGET_COMMAND );
 			}
 
-		#elif CAMERA_TYPE == 2
+		#elif CAMERA_TYPE == 3
 			// USB Camera (or internal laptop cam)
 			frame = cvQueryFrame( capture );
-
-									printf("HERE!\n");
 		#endif
 
 
@@ -218,8 +233,8 @@ int main( int argc, char** argv )
 
 
 		// release the memory of the images we created.
-		#if CAMERA_TYPE != 2
-			// in the case of a USB webcam, cvQueryFrame(...) does its own memory management
+		#if CAMERA_TYPE != 1 && CAMERA_TYPE != 3
+			// in the case of as OpenCV stream, cvQueryFrame(...) does its own memory management
 			cvReleaseImage(&frame);
 		#endif
 		cvReleaseImage(&mask);
