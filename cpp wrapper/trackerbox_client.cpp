@@ -42,7 +42,7 @@ struct VisionReport {
 #define PRINT_STUFF 1
 
 
-int main(int argc, char *argv[]) {
+VisionReport* getTrackerboxData(const char* rpi_addr) {
    int sockfd, portno, n;
    struct sockaddr_in serv_addr;
    struct hostent *server;
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
       exit(1);
    }
 
-   server = gethostbyname("127.0.0.1");
+   server = gethostbyname(rpi_addr);
 
    if (server == NULL) {
       fprintf(stderr,"ERROR, no such host\n");
@@ -135,6 +135,13 @@ int main(int argc, char *argv[]) {
 											 			vr->targetsFound[0].boundingArea);
 		}
 	#endif
+
+}
+
+
+int main(int argc, char *argv[]) {
+
+	getTrackerboxData("127.0.0.1");
 
 	return 0;
 }
