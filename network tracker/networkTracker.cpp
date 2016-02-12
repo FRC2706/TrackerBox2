@@ -35,7 +35,7 @@
 #include <sys/wait.h>
 #include <pthread.h>	// light multi-threading library
 
-#define SHOW_GUI 1
+#define SHOW_GUI 0
 #define PRINT_FPS 1
 #define PRINT_NETWORK_DEBUGGING 1
 
