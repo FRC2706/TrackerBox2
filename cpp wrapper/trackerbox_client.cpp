@@ -41,7 +41,12 @@ struct VisionReport {
 #define VISION_DATA_PORT = 1182;
 #define PRINT_STUFF 1
 
-
+// When ever you call this, remember to free the memory after!
+//
+// VisionReport* visionReport = getTrackerboxData(rpi_addr);
+// ...
+// free[] vr->targetsFound;
+// free vr;
 VisionReport* getTrackerboxData(const char* rpi_addr) {
    int sockfd, portno, n;
    struct sockaddr_in serv_addr;
