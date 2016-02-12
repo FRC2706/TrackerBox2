@@ -62,14 +62,14 @@ VisionReport* getTrackerboxData(const char* rpi_addr) {
 
    if (sockfd < 0) {
       perror("ERROR opening socket");
-      exit(1);
+      return 0;
    }
 
    server = gethostbyname(rpi_addr);
 
    if (server == NULL) {
       fprintf(stderr,"ERROR, no such host\n");
-      exit(0);
+      return 0;
    }
 
    bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -80,7 +80,7 @@ VisionReport* getTrackerboxData(const char* rpi_addr) {
    /* Now connect to the server */
    if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
       perror("ERROR connecting");
-      exit(1);
+      return 0;
    }
 
 
@@ -91,7 +91,7 @@ VisionReport* getTrackerboxData(const char* rpi_addr) {
 
    if (n < 0) {
       perror("ERROR writing to socket");
-      exit(1);
+      return 0;
    }
 
    /* Now read server response */
@@ -100,8 +100,10 @@ VisionReport* getTrackerboxData(const char* rpi_addr) {
 
    if (n < 0) {
       perror("ERROR reading from socket");
-      exit(1);
+      return 0;
    }
+
+     close(newsockfd);
 
 	#if PRINT_STUFF
    		printf("I got back: \"%s\"\n",buffer);

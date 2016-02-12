@@ -43,7 +43,7 @@
 // 1 = IP Camera -- streaming with OpenCV's codecs
 // 2 = IP Camera -- fetch image from web address using a file downloader (here because not all cameras stream properly)
 // 3 = USB Camera (or internal laptop cam)
-#define CAMERA_TYPE 2
+#define CAMERA_TYPE 0
 
 
 using namespace cv;
