@@ -45,8 +45,8 @@ struct VisionReport {
 //
 // VisionReport* visionReport = getTrackerboxData(rpi_addr);
 // ...
-// free[] vr->targetsFound;
-// free vr;
+// delete[] vr->targetsFound;
+// delete vr;
 VisionReport* getTrackerboxData(const char* rpi_addr) {
    int sockfd, portno, n;
    struct sockaddr_in serv_addr;
