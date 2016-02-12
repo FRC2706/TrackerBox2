@@ -35,14 +35,14 @@
 #include <sys/wait.h>
 #include <pthread.h>	// light multi-threading library
 
-#define SHOW_GUI 0
+#define SHOW_GUI 1
 #define PRINT_FPS 1
 #define PRINT_NETWORK_DEBUGGING 1
 
 // 0 = No Camera, file from disk (camera.jpg)
 // 1 = IP Camera (or fetch image from web address)
 // 2 = USB Camera (or internal laptop cam)
-#define CAMERA_TYPE 1
+#define CAMERA_TYPE 0
 
 
 using namespace cv;
@@ -341,45 +341,50 @@ void *runDataRequestServer(void *placeHolder) {
 			}
 
 			#if PRINT_NETWORK_DEBUGGING
-			printf("Received a request for the particle data.\n");
+				printf("Received a request for the vision data.\n");
 			#endif
 
-			/* read the current particle report from "particleReport.yaml" and send it back */
+			/* read the current vision report from "particleReport.yaml" and send it back */
 			// char msg[mostRecentVR.numTargetsFound * 24 + 1];
 			char msg[2048]; // let's just make this big.
 
 			pthread_mutex_lock( &mostRecentPRMutex );
-			int charsWritten = 0;
 
 			#if PRINT_NETWORK_DEBUGGING
-			printf("numTargetsFound: %d\n",mostRecentVR.numTargetsFound );
+				printf("numTargetsFound: %d\n",mostRecentVR.numTargetsFound );
 			#endif
 
 			int w;
+			int charsWritten = 0;
 			for (w = 0; w < mostRecentVR.numTargetsFound; w++)
 			{
 				// commented out because I changed what's in the Report struct
-		  		charsWritten += sprintf(&msg[w*24], "%.3f,%.3f,%.3f,%.3f:", mostRecentVR.targetsFound[w].ctrX, mostRecentVR.targetsFound[w].ctrY, mostRecentVR.targetsFound[w].aspectRatio, mostRecentVR.targetsFound[w].boundingArea);
+		  		charsWritten += sprintf(&msg[charsWritten], "%.3f,%.3f,%.3f,%.3f:", mostRecentVR.targetsFound[w].ctrX,
+																			mostRecentVR.targetsFound[w].ctrY,
+																			mostRecentVR.targetsFound[w].aspectRatio,
+																			mostRecentVR.targetsFound[w].boundingArea);
 
 				#if PRINT_NETWORK_DEBUGGING
 				printf("charsWritten: %d\n", charsWritten);
 				#endif
 			}
 			if (mostRecentVR.numTargetsFound == 0) {
-				msg[0] = '\0';
-			} else {
-				// the last one should not have a ':'
-				msg[(w)*24 -1] = '\0';
+				msg[0] = ' ';
+				msg[1] = '\0';
 			}
+			// } else {
+			// 	// the last one should not have a ':'
+			// 	msg[(w)*24 -1] = '\0';
+			// }
 
 			pthread_mutex_unlock( &mostRecentPRMutex );
 
 
 			#if PRINT_NETWORK_DEBUGGING
-			printf("message to send: %s\n", msg);
+				printf("message to send: \"%s\"\n", msg);
 			#endif
 
-			n = write(newsockfd,msg,charsWritten);
+			n = write(newsockfd,msg,strlen(msg));
 			if (n < 0)
 			{
 				perror("ERROR writing to socket");
