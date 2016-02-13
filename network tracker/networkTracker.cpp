@@ -43,7 +43,7 @@
 // 1 = IP Camera -- streaming with OpenCV's codecs
 // 2 = IP Camera -- fetch image from web address using a file downloader (here because not all cameras stream properly)
 // 3 = USB Camera (or internal laptop cam)
-#define CAMERA_TYPE 0
+#define CAMERA_TYPE 2
 
 
 using namespace cv;
@@ -240,7 +240,7 @@ int main( int argc, char** argv )
 		cvReleaseImage(&mask);
 		cvReleaseImage(&outputImage);
 
-		#if CAMERA_TYPE == 1
+		#if CAMERA_TYPE == 2
 			// IP Camera (or fetch image from web address)
 			int returnStatus;
 			waitpid(childpid, &returnStatus, 0);	// -1 means that the parent process will wait for _all_ child processes to terminate. We're only starting 1 child.
