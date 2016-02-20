@@ -53,7 +53,7 @@ Make a backup of the important file in case you make a mistake.
     
 Open `/etc/network/interfaces` in your favorite editor, we will be using 
 
-    $ sudo nano
+    $ sudo nano /etc/network/interfaces
     
 In the file, find the line with: iface eth0 inet dhcp
 edit the line so it says: iface eth0 inet static
