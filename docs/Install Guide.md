@@ -56,7 +56,7 @@ Open `/etc/network/interfaces` in your favorite editor, we will be using
     $ sudo nano /etc/network/interfaces
     
 In the file, find the line with: iface eth0 inet dhcp
-edit the line so it says: iface eth0 inet static
+edit the line so it says: `iface eth0 inet static`
 Add these lines under the text
 
     address 10.27.6.231 (the address you want,10.XX.XX.Y where XXXX is your team number)
