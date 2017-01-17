@@ -61,9 +61,9 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 
 		// convienience vars to save typing
 		int bblx = bb.x;					// x coordinate of the left side of the bounding box
-		int bbrx = bb.x + bb.width;	// x coordinate of the right side of the bounding box
+		int bbrx = bb.x + bb.width;	        // x coordinate of the right side of the bounding box
 		int bbty = bb.y;					// y coordinate of the top of the bounding box
-		int bbby = bb.y + bb.height;	// y coordinate of the bottem of the bounding box
+		int bbby = bb.y + bb.height;	    // y coordinate of the bottem of the bounding box
 
 		topLeft.push_back(contours[i][0]);
 		botLeft.push_back(contours[i][0]);

@@ -9,9 +9,6 @@ struct VisionTarget {
   //center of target
   float ctrX;             // [-1.0, 1.0]
   float ctrY;             // [-1.0, 1.0]
-
-  // the aspect ratio of the target we found. This can be used directly as a poor-man's measure of skew.
-  float aspectRatio;
 };
 
 struct VisionReport {
