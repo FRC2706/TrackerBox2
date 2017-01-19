@@ -1,6 +1,8 @@
 #ifndef VISION_DATA__H
 #define VISION_DATA__H
 
+#define DATA_VERSION_CODE Stronghold2017
+
 struct VisionTarget {
 
   // the area of the bounding box of this target, as a fraction of the total area of the image.
