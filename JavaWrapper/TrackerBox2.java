@@ -15,10 +15,10 @@ public class TrackerBox2 {
 		  public float ctrX = -1;             // [-1.0, 1.0]
 		  public float ctrY = -1;             // [-1.0, 1.0]
 		  // the aspect ratio of the target we found. This can be used directly as a poor-man's measure of skew.
-		  public float aspectRatio = -1;
+		  
 
 			public String toString() {
-				return "position: (" + ctrX + ", " + ctrY + "), boundingArea: " + boundingArea + ", aspectRatio: " + aspectRatio;
+				return "position: (" + ctrX + ", " + ctrY + "), boundingArea: " + boundingArea;
 			}
 	}
 
@@ -47,6 +47,7 @@ public class TrackerBox2 {
 				System.out.println("Sending request to TrackerBox2 for vision data");
 			outToServer.println(""); // basically send an empty message
 			outToServer.flush();
+			//we stopped here
 
 			byte[] rawBytes = new byte[2048];
 			try {
@@ -60,6 +61,7 @@ public class TrackerBox2 {
 				String rawData = new String(rawBytes);
 				if(PRINT_STUFF)
 					System.out.println("I got back: " + rawData);
+				
 
 				if(rawData.length() == 0) {
 					prList.add(new TargetObject());
@@ -73,11 +75,10 @@ public class TrackerBox2 {
 							TargetObject pr = new TargetObject();
 							pr.ctrX = Float.parseFloat(targetData[0]);
 							pr.ctrY	= Float.parseFloat(targetData[1]);
-							pr.aspectRatio = Float.parseFloat(targetData[2]);
-							pr.boundingArea = Float.parseFloat(targetData[3]);
+							pr.boundingArea = Float.parseFloat(targetData[2]);
 
 							if(PRINT_STUFF)
-								System.out.println("Target found at: " + pr.ctrX + "," + pr.ctrY + ", and aspectRatio and boundingArea is: " + pr.aspectRatio + "," + pr.boundingArea);
+								System.out.println("Target found at: " + pr.ctrX + "," + pr.ctrY + ", and boundingArea is: " + "," + pr.boundingArea);
 
 							prList.add(pr);
 						} catch (NumberFormatException e) {
@@ -85,6 +86,8 @@ public class TrackerBox2 {
 						}
 					}
 				}
+				
+				// up to here
 			} catch (java.io.EOFException e) {
 				System.out.println("Camera: Communication Error");
 			}
@@ -104,8 +107,8 @@ public class TrackerBox2 {
 			System.out.println("Network call successful, returning not null data...");
 
 		return prList;
-	}
-
+	 
+		}
 
 
 }
