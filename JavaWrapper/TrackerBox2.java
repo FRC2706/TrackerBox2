@@ -6,6 +6,7 @@ import java.util.ArrayList;
 public class TrackerBox2 {
 	public  String RPi_addr;
 	public final  int visionDataPort = 1182;
+	public static final String DATA_VERSION_CODE = "2017";
 
 	public boolean PRINT_STUFF = true;
 
@@ -37,6 +38,12 @@ public class TrackerBox2 {
 		try {
 			sock.connect(new InetSocketAddress(RPi_addr, visionDataPort), 20);
 		} catch (Exception e) {
+			try {
+				sock.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			return null;
 		}
 
@@ -51,8 +58,6 @@ public class TrackerBox2 {
 
 			byte[] rawBytes = new byte[2048];
 			try {
-				// rawData = inFromServer.read();
-				int n;
 				if( sock.getInputStream().read(rawBytes) < 0 ) {
 					System.out.println("Something went wrong reading response from TrackerBox2: ");
 					return null;
@@ -62,7 +67,16 @@ public class TrackerBox2 {
 				if(PRINT_STUFF)
 					System.out.println("I got back: " + rawData);
 				
-
+				//check protocol version
+				String verCode = rawData.split("\\|")[0];
+				rawData = rawData.split("\\|")[1];
+				
+				if (!verCode.equals(DATA_VERSION_CODE)){
+					System.out.println("Wrong version code! I am version " + DATA_VERSION_CODE + " but I got " + verCode + "from the Pi");
+					return null;
+				}
+				
+				
 				if(rawData.length() == 0) {
 					prList.add(new TargetObject());
 					System.out.println("No Targets Found");
