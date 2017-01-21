@@ -36,14 +36,14 @@
 #include <pthread.h>	// light multi-threading library
 
 #define SHOW_GUI 1
-#define PRINT_FPS 1
+#define PRINT_FPS 0
 #define PRINT_NETWORK_DEBUGGING 1
 
 // 0 = No Camera, file from disk (camera.jpg)
 // 1 = IP Camera -- streaming with OpenCV's codecs
 // 2 = IP Camera -- fetch image from web address using a file downloader (here because not all cameras stream properly)
 // 3 = USB Camera (or internal laptop cam)
-#define CAMERA_TYPE 2
+#define CAMERA_TYPE 0
 
 
 using namespace cv;
@@ -371,22 +371,23 @@ void *runDataRequestServer(void *placeHolder) {
 
 			int w;
 			int charsWritten = 0;
+
+            charsWritten += sprintf(&msg[charsWritten], "2017|");
+
 			for (w = 0; w < mostRecentVR.numTargetsFound; w++)
 			{
+
+
 				// commented out because I changed what's in the Report struct
-		  		charsWritten += sprintf(&msg[charsWritten], "%.3f,%.3f,%.3f,%.3f:", mostRecentVR.targetsFound[w].ctrX,
+		  		charsWritten += sprintf(&msg[charsWritten], "%.3f,%.3f,%.3f:", mostRecentVR.targetsFound[w].ctrX,
 																			mostRecentVR.targetsFound[w].ctrY,
-																			mostRecentVR.targetsFound[w].aspectRatio,
 																			mostRecentVR.targetsFound[w].boundingArea);
 
 				#if PRINT_NETWORK_DEBUGGING
 				printf("charsWritten: %d\n", charsWritten);
 				#endif
 			}
-			if (mostRecentVR.numTargetsFound == 0) {
-				msg[0] = ' ';
-				msg[1] = '\0';
-			}
+	
 			// } else {
 			// 	// the last one should not have a ':'
 			// 	msg[(w)*24 -1] = '\0';
