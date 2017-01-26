@@ -5,7 +5,6 @@
 VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetArea) {
 
 	//These are pointers to IPL images, which will hold the result of our calculations
-  //	IplImage *outputImage = cvCreateImage(cvSize(img_width,img_height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
 	IplImage *working_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //1 channel for greyscale
 	IplImage *edge_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //We use cvGetSize to make sure the images are the same size.
 
@@ -17,7 +16,7 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 	//The simplest way to solve this problem is to "dilate" the image. This is a morphological operator that will set any pixel in a binary image to 255 (on)
 	//if it has one neighbour that is not 0. The result of this is that edges grow fatter and small holes are filled in.
 	//We re-use working_image to store the results, as we won't need it anymore.
-	cvDilate(edge_image, working_image, 0, 1);
+    cvDilate(edge_image, working_image, 0, 1);
 
 	//Once we have a binary image, we can look for contours in it. cvFindContours will scan through the image and store connected contours in "sorage".
 	//"contours" will point to the first contour detected. CV_RETR_TREE means that the function will create a contour hierarchy. Each contour will contain
@@ -172,3 +171,203 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 
 	return vr;
 }
+
+/** Given a binary image, find the centre of mass of the white pixels **/
+VisionReport findCOM(IplImage* mask, IplImage* outputImage, int minTargetArea) {
+
+    	//These are pointers to IPL images, which will hold the result of our calculations
+    	IplImage *working_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //1 channel for greyscale
+    	IplImage *edge_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //We use cvGetSize to make sure the images are the same size.
+
+    	//We then detect edges in the image using the Canny algorithm. This will return a binary image, one where the pixel values will be 255 for
+    	//pixels that are edges and 0 otherwise. This is unlike other edge detection algorithms like Sobel, which compute greyscale levels.
+    	cvCanny(mask, edge_image, (double)128, (double)128, 3); //We use the threshold values from the trackbars and set the window size to 3
+
+    	//The edges returned by the Canny algorithm might have small holes in them, which will cause some problems during contour detection.
+    	//The simplest way to solve this problem is to "dilate" the image. This is a morphological operator that will set any pixel in a binary image to 255 (on)
+    	//if it has one neighbour that is not 0. The result of this is that edges grow fatter and small holes are filled in.
+    	//We re-use working_image to store the results, as we won't need it anymore.
+//        cvDilate(edge_image, working_image, 0, 1);
+
+    	//Once we have a binary image, we can look for contours in it. cvFindContours will scan through the image and store connected contours in "sorage".
+    	//"contours" will point to the first contour detected. CV_RETR_TREE means that the function will create a contour hierarchy. Each contour will contain
+    	//a pointer to contours that are contained inside it (holes). CV_CHAIN_APPROX_NONE means that all the contours points will be stored. Finally, an offset
+    	//value can be specified, but we set it to (0,0).
+//    	std::vector<std::vector<cv::Point> > contours;
+//    	cv::Mat mat_working_image(working_image);
+//    	cv::Mat mat_outputImage(outputImage);
+//      cv::findContours(mat_working_image, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+
+    	// find the points on the contour that are closest to the outside conerns of the image.
+//    	std::vector<cv::Point> topLeft(contours.size()); // Top Left Point of Bounding Box
+//    	std::vector<cv::Point> botLeft(contours.size()); // Bottom Left Point of Bounding Box
+//    	std::vector<cv::Point> topRight(contours.size()); // Top Right Point of Bounding Box
+//    	std::vector<cv::Point> botRight(contours.size()); // Bottom Right Point of Bounding Box
+
+    	// I'm cheating and using squared distance because I only need find the smallest so I can avoid doing the slow square-root.
+    	long distTopLeft, distBotLeft, distTopRight, distBotRight;
+
+    	//cv::Scalar drawColour = cv::Scalar( 44, 169, 62 ); // use a random drawColour to tell each target apart
+    	cv::Scalar drawColour = cv::Scalar( 237, 19, 75 ); // use a random drawColour to tell each target apart
+
+    	// initialize random seed:
+//    	srand ( time(NULL) );
+//    	unsigned int numTargetsFound=0;
+//    	for (unsigned int i = 0; i < contours.size(); ++i) {
+
+    		// if there are no points in this contour, skip it.
+//    		if(contours[i].size() <= 0)
+//    			continue;
+
+    		// if this contour has too small an area, skip it.
+//    		if(contourArea(contours[i]) < minTargetArea)
+//    			continue;
+
+    		// Find the bounding box for this target
+//    		cv::Rect bb;	// the bounding box
+//    		std::vector<cv::Point> contour_poly( contours[i].size() );
+//    		cv::approxPolyDP( cv::Mat( contours[i] ), contour_poly, 3, true );
+//    		bb = boundingRect( cv::Mat(contour_poly) );
+
+    		// convienience vars to save typing
+//    		int bblx = bb.x;					// x coordinate of the left side of the bounding box
+//    		int bbrx = bb.x + bb.width;	// x coordinate of the right side of the bounding box
+//    		int bbty = bb.y;					// y coordinate of the top of the bounding box
+//    		int bbby = bb.y + bb.height;	// y coordinate of the bottem of the bounding box
+
+//    		topLeft.push_back(contours[i][0]);
+//    		botLeft.push_back(contours[i][0]);
+//    		topRight.push_back(contours[i][0]);
+//    		botRight.push_back(contours[i][0]);
+
+    		// these should be relative to the target's basic bounding box
+//    		distTopLeft = (bblx-topLeft[numTargetsFound].x) * (bblx-topLeft[numTargetsFound].x) + (bbty-topLeft[numTargetsFound].y) * (bbty-topLeft[numTargetsFound].y);
+//    		distBotLeft = (bblx-botLeft[numTargetsFound].x) * (bblx-botLeft[numTargetsFound].x) + (bbby-botLeft[numTargetsFound].y) * (bbby-botLeft[numTargetsFound].y);
+//    		distTopRight = (bbrx-topRight[numTargetsFound].x) * (bbrx-topRight[numTargetsFound].x) + (bbty-topRight[numTargetsFound].y) * (bbty-topRight[numTargetsFound].y);
+//    		distBotRight = (bbrx-botRight[numTargetsFound].x) * (bbrx-botRight[numTargetsFound].x) + (bbty-botRight[numTargetsFound].y) * (bbty-botRight[numTargetsFound].y);
+//    		int dist;
+//    		for(unsigned int j = 1; j < contours[i].size(); ++j){
+//    			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
+//    		  if (dist < distTopLeft){
+//    				topLeft[numTargetsFound].x = contours[i][j].x;
+//    				topLeft[numTargetsFound].y = contours[i][j].y;
+//    				distTopLeft = dist;
+//    		  }
+//    			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
+//    			if (dist < distBotLeft){
+//    				botLeft[numTargetsFound].x = contours[i][j].x;
+//    				botLeft[numTargetsFound].y = contours[i][j].y;
+//    				distBotLeft = dist;
+//    		  }
+//    			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
+//    			if (dist < distTopRight){
+//    				topRight[numTargetsFound].x = contours[i][j].x;
+//    				topRight[numTargetsFound].y = contours[i][j].y;
+//    				distTopRight = dist;
+///    		  }
+    //			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
+    //			if (dist < distBotRight){
+    //				botRight[numTargetsFound].x = contours[i][j].x;
+    //				botRight[numTargetsFound].y = contours[i][j].y;
+    //				distBotRight = dist;
+    //		  }
+    //		}
+}
+	//These are pointers to IPL images, which will hold the result of our calculations
+  	IplImage *outputImage = cvCreateImage(cvSize(img_width,img_height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
+	IplImage *working_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //1 channel for greyscale
+	IplImage *edge_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //We use cvGetSize to make sure the images are the same size.
+
+	//We then detect edges in the image using the Canny algorithm. This will return a binary image, one where the pixel values will be 255 for
+	//pixels that are edges and 0 otherwise. This is unlike other edge detection algorithms like Sobel, which compute greyscale levels.
+	cvCanny(mask, edge_image, (double)128, (double)128, 3); //We use the threshold values from the trackbars and set the window size to 3
+
+	//The edges returned by the Canny algorithm might have small holes in them, which will cause some problems during contour detection.
+	//The simplest way to solve this problem is to "dilate" the image. This is a morphological operator that will set any pixel in a binary image to 255 (on)
+	//if it has one neighbour that is not 0. The result of this is that edges grow fatter and small holes are filled in.
+	//We re-use working_image to store the results, as we won't need it anymore.
+    cvDilate(edge_image, working_image, 0, 1);
+
+	//Once we have a binary image, we can look for contours in it. cvFindContours will scan through the image and store connected contours in "sorage".
+	//"contours" will point to the first contour detected. CV_RETR_TREE means that the function will create a contour hierarchy. Each contour will contain
+	//a pointer to contours that are contained inside it (holes). CV_CHAIN_APPROX_NONE means that all the contours points will be stored. Finally, an offset
+	//value can be specified, but we set it to (0,0).
+	std::vector<std::vector<cv::Point> > contours;
+	cv::Mat mat_working_image(working_image);
+	cv::Mat mat_outputImage(outputImage);
+	cv::findContours(mat_working_image, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+
+	// find the points on the contour that are closest to the outside conerns of the image.
+	std::vector<cv::Point> topLeft(contours.size()); // Top Left Point of Bounding Box
+	std::vector<cv::Point> botLeft(contours.size()); // Bottom Left Point of Bounding Box
+	std::vector<cv::Point> topRight(contours.size()); // Top Right Point of Bounding Box
+	std::vector<cv::Point> botRight(contours.size()); // Bottom Right Point of Bounding Box
+
+	// I'm cheating and using squared distance because I only need find the smallest so I can avoid doing the slow square-root.
+	long distTopLeft, distBotLeft, distTopRight, distBotRight;
+
+	//cv::Scalar drawColour = cv::Scalar( 44, 169, 62 ); // use a random drawColour to tell each target apart
+	cv::Scalar drawColour = cv::Scalar( 237, 19, 75 ); // use a random drawColour to tell each target apart
+
+	// initialize random seed:
+	srand ( time(NULL) );
+	unsigned int numTargetsFound=0;
+	for (unsigned int i = 0; i < contours.size(); ++i) {
+
+		// if there are no points in this contour, skip it.
+		if(contours[i].size() <= 0)
+			continue;
+
+		// if this contour has too small an area, skip it.
+		if(contourArea(contours[i]) < minTargetArea)
+			continue;
+
+		// Find the bounding box for this target
+		cv::Rect bb;	// the bounding box
+		std::vector<cv::Point> contour_poly( contours[i].size() );
+		cv::approxPolyDP( cv::Mat( contours[i] ), contour_poly, 3, true );
+		bb = boundingRect( cv::Mat(contour_poly) );
+
+		// convienience vars to save typing
+		int bblx = bb.x;					// x coordinate of the left side of the bounding box
+		int bbrx = bb.x + bb.width;	// x coordinate of the right side of the bounding box
+		int bbty = bb.y;					// y coordinate of the top of the bounding box
+		int bbby = bb.y + bb.height;	// y coordinate of the bottem of the bounding box
+
+		topLeft.push_back(contours[i][0]);
+		botLeft.push_back(contours[i][0]);
+		topRight.push_back(contours[i][0]);
+		botRight.push_back(contours[i][0]);
+
+		// these should be relative to the target's basic bounding box
+		distTopLeft = (bblx-topLeft[numTargetsFound].x) * (bblx-topLeft[numTargetsFound].x) + (bbty-topLeft[numTargetsFound].y) * (bbty-topLeft[numTargetsFound].y);
+		distBotLeft = (bblx-botLeft[numTargetsFound].x) * (bblx-botLeft[numTargetsFound].x) + (bbby-botLeft[numTargetsFound].y) * (bbby-botLeft[numTargetsFound].y);
+		distTopRight = (bbrx-topRight[numTargetsFound].x) * (bbrx-topRight[numTargetsFound].x) + (bbty-topRight[numTargetsFound].y) * (bbty-topRight[numTargetsFound].y);
+		distBotRight = (bbrx-botRight[numTargetsFound].x) * (bbrx-botRight[numTargetsFound].x) + (bbty-botRight[numTargetsFound].y) * (bbty-botRight[numTargetsFound].y);
+		int dist;
+		for(unsigned int j = 1; j < contours[i].size(); ++j){
+			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
+		  if (dist < distTopLeft){
+				topLeft[numTargetsFound].x = contours[i][j].x;
+				topLeft[numTargetsFound].y = contours[i][j].y;
+				distTopLeft = dist;
+		  }
+			dist = (bblx-contours[i][j].x) * (bblx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
+			if (dist < distBotLeft){
+				botLeft[numTargetsFound].x = contours[i][j].x;
+				botLeft[numTargetsFound].y = contours[i][j].y;
+				distBotLeft = dist;
+		  }
+			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbty-contours[i][j].y) * (bbty-contours[i][j].y);
+			if (dist < distTopRight){
+				topRight[numTargetsFound].x = contours[i][j].x;
+				topRight[numTargetsFound].y = contours[i][j].y;
+				distTopRight = dist;
+		  }
+			dist = (bbrx-contours[i][j].x) * (bbrx-contours[i][j].x) + (bbby-contours[i][j].y) * (bbby-contours[i][j].y);
+			if (dist < distBotRight){
+				botRight[numTargetsFound].x = contours[i][j].x;
+				botRight[numTargetsFound].y = contours[i][j].y;
+				distBotRight = dist;
+		  }
+		}
