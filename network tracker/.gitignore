@@ -1,0 +1,6 @@
+*.o
+
+trackerbox2
+
+# we tweak this file constantly, so ignore changes
+TrackerBox2_parameters.yaml
