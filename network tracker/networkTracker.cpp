@@ -35,9 +35,9 @@
 #include <sys/wait.h>
 #include <pthread.h>	// light multi-threading library
 
-#define SHOW_GUI 1
-#define PRINT_FPS 0
-#define PRINT_NETWORK_DEBUGGING 1
+#define SHOW_GUI 0
+#define PRINT_FPS 1
+#define PRINT_NETWORK_DEBUGGING 0
 
 // 0 = No Camera, file from disk (camera.jpg)
 // 1 = IP Camera -- streaming with OpenCV's codecs
@@ -215,11 +215,11 @@ int main( int argc, char** argv )
 
 
 		IplImage* outputImage = cvCloneImage(frame);
-		mostRecentVR = findFRCVisionTargets(mask, outputImage, p.minTargetArea);
-
+        mostRecentVR = findCOM(mask, outputImage, p.minTargetArea);
+        //mostRecentVR = findFRCVisionTargets(mask, outputImage, p.minTargetArea);
 		//std::cout << " | " << mostRecentVR.targetsFound[0].aspectRatio << " | " << mostRecentVR.targetsFound[0].ctrX << " | " << mostRecentVR.targetsFound[0].ctrY << " | " << mostRecentVR.targetsFound[0].boundingArea << " | ";
 		#if PRINT_FPS
-			printf("Found %d targets.  ", mostRecentVR.numTargetsFound);
+			printf("Target area:  %.2f ", mostRecentVR.targetsFound[0].boundingArea);
 		#endif
 
 		#if SHOW_GUI

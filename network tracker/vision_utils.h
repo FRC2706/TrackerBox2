@@ -5,5 +5,6 @@
 #include "networkTracker.h"
 
 VisionReport findFRCVisionTargets(IplImage* frame, IplImage* outputImage, int minTargetArea);
+VisionReport findCOM(IplImage* mask, IplImage* outputImage, int minTargetArea);
 
 #endif

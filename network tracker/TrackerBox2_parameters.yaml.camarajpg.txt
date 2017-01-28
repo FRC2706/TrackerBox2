@@ -1,9 +1,9 @@
-maxVal: 218
+maxVal: 240
 maxSat: 255
+maxHue: 240
 ipCamAddr: http://10.27.6.201/image/jpeg.cgi
-maxHue: 76
-minHue: 52
-minSat: 133
 minTargetArea: 900
-minVal: 67
+minVal: 30
+minHue: 80
+minSat: 50
 erodeDilateSize: 1

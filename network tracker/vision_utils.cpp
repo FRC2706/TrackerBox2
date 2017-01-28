@@ -5,7 +5,6 @@
 VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int minTargetArea) {
 
 	//These are pointers to IPL images, which will hold the result of our calculations
-  //	IplImage *outputImage = cvCreateImage(cvSize(img_width,img_height),IPL_DEPTH_8U,3); //size, depth, channels (RGB = 3)
 	IplImage *working_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //1 channel for greyscale
 	IplImage *edge_image = cvCreateImage(cvGetSize(outputImage), IPL_DEPTH_8U, 1); //We use cvGetSize to make sure the images are the same size.
 
@@ -17,7 +16,7 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 	//The simplest way to solve this problem is to "dilate" the image. This is a morphological operator that will set any pixel in a binary image to 255 (on)
 	//if it has one neighbour that is not 0. The result of this is that edges grow fatter and small holes are filled in.
 	//We re-use working_image to store the results, as we won't need it anymore.
-	cvDilate(edge_image, working_image, 0, 1);
+    cvDilate(edge_image, working_image, 0, 1);
 
 	//Once we have a binary image, we can look for contours in it. cvFindContours will scan through the image and store connected contours in "sorage".
 	//"contours" will point to the first contour detected. CV_RETR_TREE means that the function will create a contour hierarchy. Each contour will contain
@@ -171,4 +170,49 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
   cvReleaseImage(&edge_image);
 
 	return vr;
+}
+////////////////////////////////////////////////////////
+///2017 First Steamworks code starts here!//////////////
+////////////////////////////////////////////////////////
+/** Given a binary image, find the centre of mass of the white pixels **/
+VisionReport findCOM(IplImage* mask, IplImage* outputImage, int minTargetArea) {
+
+	cv::Mat mat_outputImage(outputImage);
+	cv::Scalar drawColour = cv::Scalar( 237, 19, 75 );
+
+	VisionReport vr;
+
+	vr.numTargetsFound = 1;
+	vr.targetsFound = new VisionTarget[1];
+    // compute COM of the mask!
+    int xAccum=0, yAccum=0, areaAccum=0;
+	for (int i = 0; i < mask->width; i++) {
+		for (int j = 0; j < mask->height; j++) {
+    		// if this pixel is a 1
+    		if (mask->imageData[mask->widthStep * j + i]) {  // this will be 0 if black, and -1 if white.
+    			areaAccum++;  // add 1 to the count of white pixels.
+    			xAccum += i;  // add the x-coordinate to a running total
+    			yAccum += j;  // add the y-coordinate to a running total
+            }
+		}
+    }
+
+	// The centre of mass of the target is essentially the "average" pixel.
+    int meanXpx=0, meanYpx=0;
+    if(areaAccum != 0) {
+    	meanXpx = xAccum / areaAccum;
+    	meanYpx = yAccum / areaAccum;
+    }
+    // Now convert it from pixel coordinates to [-1,1]
+	vr.targetsFound[0].ctrX = (meanXpx - ((float)mask->width / 2)) / ((float)mask->width / 2);
+	vr.targetsFound[0].ctrY = (meanYpx - ((float)mask->height / 2)) / ((float)mask->height / 2);
+
+    // area of the image occupied by the target (ie by white pixels).
+    vr.targetsFound[0].boundingArea = ((float) areaAccum) / (mask->width * mask->height);
+
+    // Draw on he display image.
+    cv::circle(mat_outputImage, cv::Point(meanXpx, meanYpx), 13, drawColour, -1);
+
+
+  return vr;
 }
