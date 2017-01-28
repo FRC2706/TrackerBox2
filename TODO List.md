@@ -1,4 +1,4 @@
-# TODO list going into the 2016 season with Team 2706.
+# TODO list going into the 2017 season with Team 2706.
 
 ## Web interface tasks [Mike + Matt + Kevin + Others]:
 
@@ -19,10 +19,8 @@
 ## C++ code tasks [Mike / Kevin, Matt / Morgan / Others]:
 
 
-- change the ramdisk params and particleReport files names from #define constants to being read from the params file
 
 ## With cRIO (to let more teams use it):
-- test and update Java wrapper
 - write & test c++ wrapper
 - write & test LabView wrapper
 
@@ -34,3 +32,4 @@ Notes for Pi image setup:
 ## Stuff That's Done:
 
 - [Done] update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
+- [Done] Update code for 2017 FIRST Steamworks vision Targets
