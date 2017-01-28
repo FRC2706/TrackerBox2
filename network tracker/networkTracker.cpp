@@ -215,11 +215,11 @@ int main( int argc, char** argv )
 
 
 		IplImage* outputImage = cvCloneImage(frame);
-		mostRecentVR = findFRCVisionTargets(mask, outputImage, p.minTargetArea);
-
+        mostRecentVR = findCOM(mask, outputImage, p.minTargetArea);
+        //mostRecentVR = findFRCVisionTargets(mask, outputImage, p.minTargetArea);
 		//std::cout << " | " << mostRecentVR.targetsFound[0].aspectRatio << " | " << mostRecentVR.targetsFound[0].ctrX << " | " << mostRecentVR.targetsFound[0].ctrY << " | " << mostRecentVR.targetsFound[0].boundingArea << " | ";
 		#if PRINT_FPS
-			printf("Found %d targets.  ", mostRecentVR.numTargetsFound);
+			printf("Target area:  %.2f ", mostRecentVR.targetsFound[0].boundingArea);
 		#endif
 
 		#if SHOW_GUI
