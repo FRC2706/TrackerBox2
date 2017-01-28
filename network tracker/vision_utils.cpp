@@ -181,9 +181,10 @@ VisionReport findCOM(IplImage* mask, IplImage* outputImage, int minTargetArea) {
 	cv::Scalar drawColour = cv::Scalar( 237, 19, 75 );
 
 	VisionReport vr;
-
-	vr.numTargetsFound = 1;
-	vr.targetsFound = new VisionTarget[1];
+	
+	
+//	vr.numTargetsFound = 1;
+//	vr.targetsFound = new VisionTarget[1];
     // compute COM of the mask!
     int xAccum=0, yAccum=0, areaAccum=0;
 	for (int i = 0; i < mask->width; i++) {
@@ -197,6 +198,13 @@ VisionReport findCOM(IplImage* mask, IplImage* outputImage, int minTargetArea) {
 		}
     }
 
+    if(areaAccum <= 900)
+    {
+	vr.numTargetsFound = 0;    
+    }
+    
+    vr.TargetsFound = vr.numTargetsFound;
+	
 	// The centre of mass of the target is essentially the "average" pixel.
     int meanXpx=0, meanYpx=0;
     if(areaAccum != 0) {
