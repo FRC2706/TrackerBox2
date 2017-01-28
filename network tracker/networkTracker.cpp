@@ -35,7 +35,7 @@
 #include <sys/wait.h>
 #include <pthread.h>	// light multi-threading library
 
-#define SHOW_GUI 0
+#define SHOW_GUI 1
 #define PRINT_FPS 1
 #define PRINT_NETWORK_DEBUGGING 0
 
@@ -43,7 +43,7 @@
 // 1 = IP Camera -- streaming with OpenCV's codecs
 // 2 = IP Camera -- fetch image from web address using a file downloader (here because not all cameras stream properly)
 // 3 = USB Camera (or internal laptop cam)
-#define CAMERA_TYPE 0
+#define CAMERA_TYPE 2
 
 
 using namespace cv;
@@ -219,7 +219,7 @@ int main( int argc, char** argv )
         //mostRecentVR = findFRCVisionTargets(mask, outputImage, p.minTargetArea);
 		//std::cout << " | " << mostRecentVR.targetsFound[0].aspectRatio << " | " << mostRecentVR.targetsFound[0].ctrX << " | " << mostRecentVR.targetsFound[0].ctrY << " | " << mostRecentVR.targetsFound[0].boundingArea << " | ";
 		#if PRINT_FPS
-			printf("Target area:  %.2f ", mostRecentVR.targetsFound[0].boundingArea);
+			printf("numTargetsFound: %d ", mostRecentVR.numTargetsFound);
 		#endif
 
 		#if SHOW_GUI
@@ -387,7 +387,7 @@ void *runDataRequestServer(void *placeHolder) {
 				printf("charsWritten: %d\n", charsWritten);
 				#endif
 			}
-	
+
 			// } else {
 			// 	// the last one should not have a ':'
 			// 	msg[(w)*24 -1] = '\0';
