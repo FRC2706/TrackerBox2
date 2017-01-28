@@ -21,8 +21,6 @@
 
 
 ## With cRIO (to let more teams use it):
-- write & test c++ wrapper
-- write & test LabView wrapper
 
 Notes for Pi image setup:
 -needs permissions for cgi-bin scripts
