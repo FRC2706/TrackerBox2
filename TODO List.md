@@ -19,18 +19,7 @@
 ## C++ code tasks [Mike / Kevin, Matt / Morgan / Others]:
 
 
-- clean up code (open-source quality commenting, etc) and remove old or unused files.
-
-- [Morgan] Optimize frame-rate by reducing image resolution?
-      This may have to wait until we have it running on a Raspberry Pi since it'll run too fast on a laptop for you to see any difference
-
-- [Morgan] hard-code the priority: 1) USB Cam, 2) Axis Cam, 3) Laptop Cam
-
-- Add (smoothed) fps to the particleReport
-
 - change the ramdisk params and particleReport files names from #define constants to being read from the params file
-
-- Rename `ParticleReport` to `COMreport` everywhere that it's used cause "particle" doesn't really make sense.
 
 ## With cRIO (to let more teams use it):
 - test and update Java wrapper
