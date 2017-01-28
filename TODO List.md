@@ -32,4 +32,3 @@ Notes for Pi image setup:
 ## Stuff That's Done:
 
 - [Done] update code to use the libyaml0.5 api, if they take libyaml0.3 off the ubuntu repos, we're in trouble.
-- [Done] Update code for 2017 FIRST Steamworks vision Targets
