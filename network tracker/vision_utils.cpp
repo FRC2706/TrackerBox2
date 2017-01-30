@@ -146,10 +146,7 @@ VisionReport findFRCVisionTargets(IplImage* mask, IplImage* outputImage, int min
 	{
 		float Lheight = (botLeft[i].y - topLeft[i].y);
 		float Rheight = (botRight[i].y - topRight[i].y);
-		float Twidth = (topRight[i].x - topLeft[i].x);
 		float Bwidth = (botRight[i].x - botLeft[i].x);
-
-		vr.targetsFound[i].aspectRatio = ((Rheight + Lheight) / 2) / ((Twidth + Bwidth) / 2);
 
 		// size of the image
 		// mask->width, mask->height
